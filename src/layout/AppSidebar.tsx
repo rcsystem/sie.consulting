@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { ChevronDownIcon, HorizontaLDots } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
@@ -10,7 +10,9 @@ const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
 
-  const items = filtrarMenuPorRol(navItems, rol ?? "rh");
+  const items = useMemo(() => {
+    return filtrarMenuPorRol(navItems, (rol ?? "rh") as any);
+  }, [rol]);
 
   const [openSubmenu, setOpenSubmenu] = useState<number | null>(null);
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
@@ -23,6 +25,7 @@ const AppSidebar: React.FC = () => {
     [location.pathname],
   );
 
+  // Solo sincroniza el submenu cuando cambia la ruta
   useEffect(() => {
     let matched = false;
 
@@ -41,7 +44,7 @@ const AppSidebar: React.FC = () => {
       );
       setOpenSubmenu(direct >= 0 ? direct : null);
     }
-  }, [items, isActive]);
+  }, [location.pathname, items, isActive]);
 
   useEffect(() => {
     if (openSubmenu !== null) {
@@ -67,6 +70,7 @@ const AppSidebar: React.FC = () => {
           {nav.subItems ? (
             <>
               <button
+                type="button"
                 onClick={() => handleSubmenuToggle(index)}
                 className={`menu-item group ${
                   openSubmenu === index
@@ -188,7 +192,7 @@ const AppSidebar: React.FC = () => {
                   SIE RH
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  Sistema de Integración Empresarial
+                  TailAdmin adaptado
                 </p>
               </div>
             </div>

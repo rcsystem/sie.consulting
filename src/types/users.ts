@@ -40,25 +40,23 @@ export interface UsuarioSistema {
   department?: CatalogoBase | null;
   position?: CatalogoBase | null;
   schedule?: HorarioCatalogo | null;
-  social_security_number: string;
-social_security_number: string | null;
-curp: string | null;
-business_email: string | null;
-personal_email: string | null;
-operational_area: string | null;
-cost_center: string | null;
-contract_type: string | null;
-hierarchy_level: string | null;
-manager?: {
-  id: number;
-  full_name: string;
-  email: string;
-} | null;
-director?: {
-  id: number;
-  full_name: string;
-  email: string;
-} | null;
+  social_security_number: string | null;
+  curp: string | null;
+  personal_email: string | null;
+  operational_area: string | null;
+  cost_center: string | null;
+  contract_type: string | null;
+  hierarchy_level: string | null;
+  manager?: {
+    id: number;
+    full_name: string;
+    email: string;
+  } | null;
+  director?: {
+    id: number;
+    full_name: string;
+    email: string;
+  } | null;
 }
 
 export interface RespuestaPaginadaUsuarios {
@@ -91,14 +89,13 @@ export interface FormularioUsuario {
   schedule_id: string;
   is_active: boolean;
   role: string;
-social_security_number: string;
-curp: string;
-business_email: string;
-personal_email: string;
-operational_area: string;
-cost_center: string;
-contract_type: string;
-hierarchy_level: string;
-manager_user_id: string;
-director_user_id: string;
+  social_security_number: string;
+  curp: string;
+  personal_email: string;
+  operational_area: string;
+  cost_center: string;
+  contract_type: string;
+  hierarchy_level: string;
+  manager_user_id: string;
+  director_user_id: string;
 }

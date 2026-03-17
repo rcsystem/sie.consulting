@@ -22,7 +22,6 @@ const estadoInicial: FormularioUsuario = {
   last_name: "",
   middle_name: "",
   email: "",
-  business_email: "",
   personal_email: "",
   social_security_number: "",
   curp: "",
@@ -63,38 +62,37 @@ export default function UserFormModal({
   onGuardado,
   usuarioEditar,
 }: Props) {
-  const [formulario, setFormulario] = useState<FormularioUsuario>(estadoInicial);
+  const [formulario, setFormulario] =
+    useState<FormularioUsuario>(estadoInicial);
   const [roles, setRoles] = useState<RolSistema[]>([]);
   const [departamentos, setDepartamentos] = useState<CatalogoBase[]>([]);
   const [puestos, setPuestos] = useState<CatalogoBase[]>([]);
   const [horarios, setHorarios] = useState<HorarioCatalogo[]>([]);
-  const [usuariosRelacionados, setUsuariosRelacionados] = useState<UsuarioSistema[]>([]);
+  const [usuariosRelacionados, setUsuariosRelacionados] = useState<
+    UsuarioSistema[]
+  >([]);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
   const [pasoActual, setPasoActual] = useState(1);
+  const [erroresLista, setErroresLista] = useState<string[]>([]);
 
   useEffect(() => {
     if (!abierto) return;
 
     const cargarCatalogos = async () => {
       try {
-        const [
-          rolesRes,
-          deptosRes,
-          puestosRes,
-          horariosRes,
-          usuariosRes,
-        ] = await Promise.all([
-          api.get("/roles"),
-          api.get("/catalogs/departments"),
-          api.get("/catalogs/positions"),
-          api.get("/catalogs/schedules"),
-          api.get("/users", {
-            params: {
-              is_active: true,
-            },
-          }),
-        ]);
+        const [rolesRes, deptosRes, puestosRes, horariosRes, usuariosRes] =
+          await Promise.all([
+            api.get("/roles"),
+            api.get("/catalogs/departments"),
+            api.get("/catalogs/positions"),
+            api.get("/catalogs/schedules"),
+            api.get("/users", {
+              params: {
+                is_active: true,
+              },
+            }),
+          ]);
 
         setRoles(rolesRes.data);
         setDepartamentos(deptosRes.data);
@@ -120,8 +118,7 @@ export default function UserFormModal({
         first_name: usuarioEditar.first_name ?? "",
         last_name: usuarioEditar.last_name ?? "",
         middle_name: usuarioEditar.middle_name ?? "",
-        email: usuarioEditar.email ?? "",
-        business_email: usuarioEditar.business_email ?? "",
+        email: usuarioEditar.email,
         personal_email: usuarioEditar.personal_email ?? "",
         social_security_number: usuarioEditar.social_security_number ?? "",
         curp: usuarioEditar.curp ?? "",
@@ -192,6 +189,9 @@ export default function UserFormModal({
     setError("");
     setGuardando(true);
 
+    setError("");
+    setErroresLista([]);
+
     try {
       const payload: Record<string, any> = {
         ...formulario,
@@ -216,15 +216,23 @@ export default function UserFormModal({
       onGuardado();
       onClose();
     } catch (error: any) {
-      const mensaje =
-        error?.response?.data?.message ||
-        error?.response?.data?.errors?.email?.[0] ||
-        error?.response?.data?.errors?.employee_number?.[0] ||
-        error?.response?.data?.errors?.business_email?.[0] ||
-        error?.response?.data?.errors?.curp?.[0] ||
-        "No fue posible guardar el usuario.";
+      const erroresBackend = error?.response?.data?.errors;
 
-      setError(mensaje);
+      if (erroresBackend && typeof erroresBackend === "object") {
+        const lista = Object.values(erroresBackend).flat() as string[];
+        setErroresLista(lista);
+
+        setError(
+          error?.response?.data?.message ||
+            "Hay errores en el formulario. Revisa los campos marcados.",
+        );
+      } else {
+        setError(
+          error?.response?.data?.message ||
+            "No fue posible guardar el usuario.",
+        );
+        setErroresLista([]);
+      }
     } finally {
       setGuardando(false);
     }
@@ -233,7 +241,9 @@ export default function UserFormModal({
   const opcionesJefes = useMemo(() => {
     return usuariosRelacionados
       .filter((usuario) =>
-        ["super_admin", "rh", "director", "manager"].includes(usuario.role ?? ""),
+        ["super_admin", "rh", "director", "manager"].includes(
+          usuario.role ?? "",
+        ),
       )
       .filter((usuario) => !usuarioEditar || usuario.id !== usuarioEditar.id)
       .map((usuario) => ({
@@ -257,7 +267,9 @@ export default function UserFormModal({
   if (!abierto) return null;
 
   return (
-    <div className={`fixed inset-0 z-[999999] ${abierto ? "pointer-events-auto" : "pointer-events-none"}`}>
+    <div
+      className={`fixed inset-0 z-[999999] ${abierto ? "pointer-events-auto" : "pointer-events-none"}`}
+    >
       <div
         className={`absolute inset-0 bg-black/40 transition-opacity duration-300 ${
           abierto ? "opacity-100" : "opacity-0"
@@ -342,19 +354,9 @@ export default function UserFormModal({
                       className="w-full border border-gray-300 px-4 py-3 dark:border-gray-700"
                       placeholder="Ej. 0001"
                       value={formulario.employee_number}
-                      onChange={(e) => actualizarCampo("employee_number", e.target.value)}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Correo principal de acceso
-                    </label>
-                    <input
-                      className="w-full border border-gray-300 px-4 py-3 dark:border-gray-700"
-                      placeholder="correo@empresa.com"
-                      value={formulario.email}
-                      onChange={(e) => actualizarCampo("email", e.target.value)}
+                      onChange={(e) =>
+                        actualizarCampo("employee_number", e.target.value)
+                      }
                     />
                   </div>
 
@@ -363,10 +365,12 @@ export default function UserFormModal({
                       Correo empresarial
                     </label>
                     <input
+                      id="email"
+                      name="email"
                       className="w-full border border-gray-300 px-4 py-3 dark:border-gray-700"
                       placeholder="nombre.apellido@empresa.com"
-                      value={formulario.business_email}
-                      onChange={(e) => actualizarCampo("business_email", e.target.value)}
+                      value={formulario.email}
+                      onChange={(e) => actualizarCampo("email", e.target.value)}
                     />
                   </div>
 
@@ -375,10 +379,14 @@ export default function UserFormModal({
                       Correo personal
                     </label>
                     <input
+                      id="personal_email"
+                      name="personal_email"
                       className="w-full border border-gray-300 px-4 py-3 dark:border-gray-700"
                       placeholder="correo.personal@gmail.com"
                       value={formulario.personal_email}
-                      onChange={(e) => actualizarCampo("personal_email", e.target.value)}
+                      onChange={(e) =>
+                        actualizarCampo("personal_email", e.target.value)
+                      }
                     />
                   </div>
 
@@ -390,7 +398,9 @@ export default function UserFormModal({
                       className="w-full border border-gray-300 px-4 py-3 dark:border-gray-700"
                       placeholder="Nombre(s)"
                       value={formulario.first_name}
-                      onChange={(e) => actualizarCampo("first_name", e.target.value)}
+                      onChange={(e) =>
+                        actualizarCampo("first_name", e.target.value)
+                      }
                     />
                   </div>
 
@@ -402,7 +412,9 @@ export default function UserFormModal({
                       className="w-full border border-gray-300 px-4 py-3 dark:border-gray-700"
                       placeholder="Apellido paterno"
                       value={formulario.last_name}
-                      onChange={(e) => actualizarCampo("last_name", e.target.value)}
+                      onChange={(e) =>
+                        actualizarCampo("last_name", e.target.value)
+                      }
                     />
                   </div>
 
@@ -414,7 +426,9 @@ export default function UserFormModal({
                       className="w-full border border-gray-300 px-4 py-3 dark:border-gray-700"
                       placeholder="Apellido materno"
                       value={formulario.middle_name}
-                      onChange={(e) => actualizarCampo("middle_name", e.target.value)}
+                      onChange={(e) =>
+                        actualizarCampo("middle_name", e.target.value)
+                      }
                     />
                   </div>
 
@@ -438,7 +452,9 @@ export default function UserFormModal({
                       className="w-full border border-gray-300 px-4 py-3 dark:border-gray-700"
                       placeholder="Celular"
                       value={formulario.mobile_phone}
-                      onChange={(e) => actualizarCampo("mobile_phone", e.target.value)}
+                      onChange={(e) =>
+                        actualizarCampo("mobile_phone", e.target.value)
+                      }
                     />
                   </div>
                 </div>
@@ -461,7 +477,10 @@ export default function UserFormModal({
                       placeholder="NSS"
                       value={formulario.social_security_number}
                       onChange={(e) =>
-                        actualizarCampo("social_security_number", e.target.value)
+                        actualizarCampo(
+                          "social_security_number",
+                          e.target.value,
+                        )
                       }
                     />
                   </div>
@@ -474,7 +493,9 @@ export default function UserFormModal({
                       className="w-full border border-gray-300 px-4 py-3 uppercase dark:border-gray-700"
                       placeholder="CURP"
                       value={formulario.curp}
-                      onChange={(e) => actualizarCampo("curp", e.target.value.toUpperCase())}
+                      onChange={(e) =>
+                        actualizarCampo("curp", e.target.value.toUpperCase())
+                      }
                     />
                   </div>
 
@@ -486,7 +507,9 @@ export default function UserFormModal({
                       className="w-full border border-gray-300 px-4 py-3 dark:border-gray-700"
                       placeholder="Dirección"
                       value={formulario.address}
-                      onChange={(e) => actualizarCampo("address", e.target.value)}
+                      onChange={(e) =>
+                        actualizarCampo("address", e.target.value)
+                      }
                     />
                   </div>
 
@@ -498,7 +521,9 @@ export default function UserFormModal({
                       className="w-full border border-gray-300 px-4 py-3 dark:border-gray-700"
                       placeholder="Colonia"
                       value={formulario.neighborhood}
-                      onChange={(e) => actualizarCampo("neighborhood", e.target.value)}
+                      onChange={(e) =>
+                        actualizarCampo("neighborhood", e.target.value)
+                      }
                     />
                   </div>
 
@@ -534,35 +559,55 @@ export default function UserFormModal({
                       className="w-full border border-gray-300 px-4 py-3 dark:border-gray-700"
                       placeholder="Código postal"
                       value={formulario.postal_code}
-                      onChange={(e) => actualizarCampo("postal_code", e.target.value)}
+                      onChange={(e) =>
+                        actualizarCampo("postal_code", e.target.value)
+                      }
                     />
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <label
+                      htmlFor="hire_date"
+                      className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
                       Fecha de ingreso
                     </label>
+
                     <input
+                      id="hire_date"
+                      name="hire_date"
                       type="date"
                       className="w-full border border-gray-300 px-4 py-3 text-sm dark:border-gray-700"
                       value={formulario.hire_date}
-                      onChange={(e) => actualizarCampo("hire_date", e.target.value)}
+                      onChange={(e) =>
+                        actualizarCampo("hire_date", e.target.value)
+                      }
                     />
+
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                       Selecciona la fecha en que ingresó el empleado.
                     </p>
                   </div>
 
                   <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <label
+                      htmlFor="birth_date"
+                      className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    >
                       Fecha de nacimiento
                     </label>
+
                     <input
+                      id="birth_date"
+                      name="birth_date"
                       type="date"
                       className="w-full border border-gray-300 px-4 py-3 text-sm dark:border-gray-700"
                       value={formulario.birth_date}
-                      onChange={(e) => actualizarCampo("birth_date", e.target.value)}
+                      onChange={(e) =>
+                        actualizarCampo("birth_date", e.target.value)
+                      }
                     />
+
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                       Selecciona la fecha de nacimiento del empleado.
                     </p>
@@ -581,7 +626,9 @@ export default function UserFormModal({
                   <SearchSelect
                     label="Departamento"
                     value={formulario.department_id}
-                    onChange={(value) => actualizarCampo("department_id", value)}
+                    onChange={(value) =>
+                      actualizarCampo("department_id", value)
+                    }
                     placeholder="Buscar departamento"
                     options={departamentos.map((item) => ({
                       value: String(item.id),
@@ -644,7 +691,9 @@ export default function UserFormModal({
                       className="w-full border border-gray-300 px-4 py-3 dark:border-gray-700"
                       placeholder="Centro de costo"
                       value={formulario.cost_center}
-                      onChange={(e) => actualizarCampo("cost_center", e.target.value)}
+                      onChange={(e) =>
+                        actualizarCampo("cost_center", e.target.value)
+                      }
                     />
                   </div>
 
@@ -679,7 +728,9 @@ export default function UserFormModal({
                   <SearchSelect
                     label="Jefe directo"
                     value={formulario.manager_user_id}
-                    onChange={(value) => actualizarCampo("manager_user_id", value)}
+                    onChange={(value) =>
+                      actualizarCampo("manager_user_id", value)
+                    }
                     placeholder="Buscar jefe directo"
                     options={opcionesJefes}
                   />
@@ -687,7 +738,9 @@ export default function UserFormModal({
                   <SearchSelect
                     label="Director"
                     value={formulario.director_user_id}
-                    onChange={(value) => actualizarCampo("director_user_id", value)}
+                    onChange={(value) =>
+                      actualizarCampo("director_user_id", value)
+                    }
                     placeholder="Buscar director"
                     options={opcionesDirectores}
                   />
@@ -697,7 +750,9 @@ export default function UserFormModal({
                   <input
                     type="checkbox"
                     checked={formulario.is_active}
-                    onChange={(e) => actualizarCampo("is_active", e.target.checked)}
+                    onChange={(e) =>
+                      actualizarCampo("is_active", e.target.checked)
+                    }
                   />
                   Usuario activo
                 </label>
@@ -724,7 +779,9 @@ export default function UserFormModal({
                           : "Contraseña"
                       }
                       value={formulario.password}
-                      onChange={(e) => actualizarCampo("password", e.target.value)}
+                      onChange={(e) =>
+                        actualizarCampo("password", e.target.value)
+                      }
                     />
                     {usuarioEditar ? (
                       <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -761,15 +818,13 @@ export default function UserFormModal({
                     </p>
                     <p>
                       <span className="font-medium">Nombre:</span>{" "}
-                      {`${formulario.first_name} ${formulario.last_name} ${formulario.middle_name}`.trim() || "-"}
+                      {`${formulario.first_name} ${formulario.last_name} ${formulario.middle_name}`.trim() ||
+                        "-"}
                     </p>
-                    <p>
-                      <span className="font-medium">Correo acceso:</span>{" "}
-                      {formulario.email || "-"}
-                    </p>
+
                     <p>
                       <span className="font-medium">Correo empresarial:</span>{" "}
-                      {formulario.business_email || "-"}
+                      {formulario.email || "-"}
                     </p>
                     <p>
                       <span className="font-medium">Rol:</span>{" "}
@@ -785,8 +840,16 @@ export default function UserFormModal({
             )}
 
             {error ? (
-              <div className="text-sm text-red-600 dark:text-red-400">
-                {error}
+              <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-500/10 dark:text-red-300">
+                <p className="font-semibold">{error}</p>
+
+                {erroresLista.length > 0 ? (
+                  <ul className="mt-3 list-disc space-y-1 pl-5">
+                    {erroresLista.map((item, index) => (
+                      <li key={`${item}-${index}`}>{item}</li>
+                    ))}
+                  </ul>
+                ) : null}
               </div>
             ) : null}
           </div>
@@ -837,4 +900,4 @@ export default function UserFormModal({
       </div>
     </div>
   );
-}                                             
+}
