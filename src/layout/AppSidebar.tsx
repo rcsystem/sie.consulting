@@ -137,9 +137,7 @@ const AppSidebar: React.FC = () => {
             <Link
               to={nav.path}
               className={`menu-item group ${
-                isActive(nav.path)
-                  ? "menu-item-active"
-                  : "menu-item-inactive"
+                isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
               }`}
             >
               <span
@@ -190,7 +188,7 @@ const AppSidebar: React.FC = () => {
                   SIE RH
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                  TailAdmin adaptado
+                  Sistema de Integración Empresarial
                 </p>
               </div>
             </div>
@@ -225,7 +223,7 @@ const AppSidebar: React.FC = () => {
           </div>
         </nav>
 
-        {(isExpanded || isHovered || isMobileOpen)}
+        {isExpanded || isHovered || isMobileOpen}
       </div>
     </aside>
   );
