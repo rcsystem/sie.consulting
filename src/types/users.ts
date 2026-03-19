@@ -19,39 +19,58 @@ export interface RolSistema {
 export interface UsuarioSistema {
   id: number;
   employee_number: string | null;
+
   name: string;
   first_name: string | null;
   last_name: string | null;
   middle_name: string | null;
   full_name: string;
+
   email: string;
+  business_email: string | null;
+  personal_email: string | null;
+
   phone: string | null;
   mobile_phone: string | null;
+
   address: string | null;
   neighborhood: string | null;
   city: string | null;
   state: string | null;
   postal_code: string | null;
+
   hire_date: string | null;
   birth_date: string | null;
+
   is_active: boolean;
+
+  social_security_number: string | null;
+  curp: string | null;
+  rfc: string | null;
+  gender: string | null;
+  marital_status: string | null;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+
+  cost_center: string | null;
+
   role: string | null;
   roles: string[];
+
   department?: CatalogoBase | null;
   position?: CatalogoBase | null;
   schedule?: HorarioCatalogo | null;
-  social_security_number: string | null;
-  curp: string | null;
-  personal_email: string | null;
-  operational_area: string | null;
-  cost_center: string | null;
-  contract_type: string | null;
-  hierarchy_level: string | null;
+
+  operational_area?: CatalogoBase | null;
+  contract_type?: CatalogoBase | null;
+  hierarchy_level?: CatalogoBase | null;
+
   manager?: {
     id: number;
     full_name: string;
     email: string;
   } | null;
+
   director?: {
     id: number;
     full_name: string;
@@ -65,37 +84,55 @@ export interface RespuestaPaginadaUsuarios {
   last_page: number;
   per_page: number;
   total: number;
+  from?: number | null;
+  to?: number | null;
 }
 
 export interface FormularioUsuario {
   employee_number: string;
+
   first_name: string;
   last_name: string;
   middle_name: string;
+
   email: string;
+  personal_email: string;
+
   password: string;
   password_confirmation: string;
+
   phone: string;
   mobile_phone: string;
+
   address: string;
   neighborhood: string;
   city: string;
   state: string;
   postal_code: string;
+
   hire_date: string;
   birth_date: string;
+
+  social_security_number: string;
+  curp: string;
+  rfc: string;
+  gender: string;
+  marital_status: string;
+  emergency_contact_name: string;
+  emergency_contact_phone: string;
+
   department_id: string;
   position_id: string;
   schedule_id: string;
-  is_active: boolean;
-  role: string;
-  social_security_number: string;
-  curp: string;
-  personal_email: string;
-  operational_area: string;
+
+  operational_area_id: string;
+  contract_type_id: string;
+  hierarchy_level_id: string;
+
   cost_center: string;
-  contract_type: string;
-  hierarchy_level: string;
   manager_user_id: string;
   director_user_id: string;
+
+  is_active: boolean;
+  role: string;
 }

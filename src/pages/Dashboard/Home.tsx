@@ -1,5 +1,6 @@
 import PageMeta from "../../components/common/PageMeta";
 import { useAuthStore } from "../../store/useAuthStore";
+import { traducirRol } from "../../utils/roles";
 
 const resumen = [
   { titulo: "Permisos pendientes", valor: "18", detalle: "Solicitudes por revisar hoy" },
@@ -20,7 +21,10 @@ export default function Home() {
 
   return (
     <>
-      <PageMeta title="Dashboard RH | SIE RH" description="Resumen principal del sistema RH" />
+      <PageMeta
+        title="Dashboard RH | SIE RH"
+        description="Resumen principal del sistema RH"
+      />
 
       <div className="space-y-6">
         <section className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
@@ -37,9 +41,10 @@ export default function Home() {
               <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
                 Rol:{" "}
                 <span className="font-semibold capitalize">
-                  {(rol ?? "sin rol").replace("_", " ")}
+                  {traducirRol(rol)}
                 </span>{" "}
-                · Departamento: {usuario?.department?.name ?? "Sin departamento"}
+                · Departamento:{" "}
+                {usuario?.department?.name ?? "Sin departamento"}
               </p>
             </div>
 
@@ -67,7 +72,9 @@ export default function Home() {
               key={item.titulo}
               className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]"
             >
-              <p className="text-sm text-gray-500 dark:text-gray-400">{item.titulo}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {item.titulo}
+              </p>
               <p className="mt-3 text-3xl font-bold text-gray-900 dark:text-white">
                 {item.valor}
               </p>
@@ -99,14 +106,16 @@ export default function Home() {
               <table className="min-w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-800">
-                    {["Folio", "Empleado", "Tipo", "Fecha", "Estado"].map((h) => (
-                      <th
-                        key={h}
-                        className="px-4 py-3 font-semibold text-gray-600 dark:text-gray-300"
-                      >
-                        {h}
-                      </th>
-                    ))}
+                    {["Folio", "Empleado", "Tipo", "Fecha", "Estado"].map(
+                      (h) => (
+                        <th
+                          key={h}
+                          className="px-4 py-3 font-semibold text-gray-600 dark:text-gray-300"
+                        >
+                          {h}
+                        </th>
+                      ),
+                    )}
                   </tr>
                 </thead>
 
@@ -137,10 +146,12 @@ export default function Home() {
             </h2>
 
             <ul className="mt-4 space-y-4 text-sm text-gray-600 dark:text-gray-400">
-              <li>Permisos personales de entrada con ventana máxima de 3 horas.</li>
               <li>
-                Permisos personales de salida con ventana máxima de 3 horas antes del fin
-                de jornada.
+                Permisos personales de entrada con ventana máxima de 3 horas.
+              </li>
+              <li>
+                Permisos personales de salida con ventana máxima de 3 horas
+                antes del fin de jornada.
               </li>
               <li>Sindicalizados con máximo 15 días de anticipación.</li>
               <li>Un solo permiso excepcional sin pago previo por usuario.</li>

@@ -1,5 +1,6 @@
 import PageMeta from "../../components/common/PageMeta";
 import { useAuthStore } from "../../store/useAuthStore";
+import { traducirRol } from "../../utils/roles";
 
 export default function MyProfilePage() {
   const usuario = useAuthStore((state) => state.usuario);
@@ -38,7 +39,7 @@ export default function MyProfilePage() {
             <div>
               <dt className="text-sm text-gray-500 dark:text-gray-400">Rol</dt>
               <dd className="mt-1 font-medium text-gray-900 dark:text-white capitalize">
-                {(rol ?? "sin rol").replace("_", " ")}
+                {traducirRol(rol)}
               </dd>
             </div>
 
@@ -52,7 +53,9 @@ export default function MyProfilePage() {
             </div>
 
             <div>
-              <dt className="text-sm text-gray-500 dark:text-gray-400">Puesto</dt>
+              <dt className="text-sm text-gray-500 dark:text-gray-400">
+                Puesto
+              </dt>
               <dd className="mt-1 font-medium text-gray-900 dark:text-white">
                 {usuario?.position?.name ?? "Sin puesto"}
               </dd>
@@ -77,7 +80,9 @@ export default function MyProfilePage() {
             </div>
 
             <div>
-              <dt className="text-sm text-gray-500 dark:text-gray-400">Horario</dt>
+              <dt className="text-sm text-gray-500 dark:text-gray-400">
+                Horario
+              </dt>
               <dd className="mt-1 font-medium text-gray-900 dark:text-white">
                 {usuario?.schedule?.name ?? "Sin horario"}
               </dd>

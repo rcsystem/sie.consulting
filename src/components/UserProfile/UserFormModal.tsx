@@ -8,6 +8,7 @@ import type {
   RolSistema,
   UsuarioSistema,
 } from "../../types/users";
+import { traducirRol } from "../../utils/roles";
 
 type Props = {
   abierto: boolean;
@@ -39,10 +40,10 @@ const estadoInicial: FormularioUsuario = {
   department_id: "",
   position_id: "",
   schedule_id: "",
-  operational_area: "",
   cost_center: "",
-  contract_type: "",
-  hierarchy_level: "",
+  operational_area_id: "",
+  contract_type_id: "",
+  hierarchy_level_id: "",
   manager_user_id: "",
   director_user_id: "",
   is_active: true,
@@ -68,6 +69,9 @@ export default function UserFormModal({
   const [departamentos, setDepartamentos] = useState<CatalogoBase[]>([]);
   const [puestos, setPuestos] = useState<CatalogoBase[]>([]);
   const [horarios, setHorarios] = useState<HorarioCatalogo[]>([]);
+  const [areasOperativas, setAreasOperativas] = useState<CatalogoBase[]>([]);
+  const [tiposContrato, setTiposContrato] = useState<CatalogoBase[]>([]);
+  const [jerarquias, setJerarquias] = useState<CatalogoBase[]>([]);
   const [usuariosRelacionados, setUsuariosRelacionados] = useState<
     UsuarioSistema[]
   >([]);
@@ -81,24 +85,34 @@ export default function UserFormModal({
 
     const cargarCatalogos = async () => {
       try {
-        const [rolesRes, deptosRes, puestosRes, horariosRes, usuariosRes] =
-          await Promise.all([
-            api.get("/roles"),
-            api.get("/catalogs/departments"),
-            api.get("/catalogs/positions"),
-            api.get("/catalogs/schedules"),
-            api.get("/users", {
-              params: {
-                is_active: true,
-              },
-            }),
-          ]);
+        const [
+          rolesRes,
+          deptosRes,
+          puestosRes,
+          horariosRes,
+          usuariosRes,
+          areasRes,
+          contractTypesRes,
+          hierarchyLevelsRes,
+        ] = await Promise.all([
+          api.get("/roles"),
+          api.get("/catalogs/departments"),
+          api.get("/catalogs/positions"),
+          api.get("/catalogs/schedules"),
+          api.get("/users", { params: { is_active: true } }),
+          api.get("/catalogs/operational-areas"),
+          api.get("/catalogs/contract-types"),
+          api.get("/catalogs/hierarchy-levels"),
+        ]);
 
         setRoles(rolesRes.data);
         setDepartamentos(deptosRes.data);
         setPuestos(puestosRes.data);
         setHorarios(horariosRes.data);
         setUsuariosRelacionados(usuariosRes.data.data ?? []);
+        setAreasOperativas(areasRes.data);
+        setTiposContrato(contractTypesRes.data);
+        setJerarquias(hierarchyLevelsRes.data);
       } catch {
         setError("No fue posible cargar los catálogos del formulario.");
       }
@@ -142,10 +156,16 @@ export default function UserFormModal({
         schedule_id: usuarioEditar.schedule?.id
           ? String(usuarioEditar.schedule.id)
           : "",
-        operational_area: usuarioEditar.operational_area ?? "",
         cost_center: usuarioEditar.cost_center ?? "",
-        contract_type: usuarioEditar.contract_type ?? "",
-        hierarchy_level: usuarioEditar.hierarchy_level ?? "",
+        operational_area_id: usuarioEditar.operational_area?.id
+          ? String(usuarioEditar.operational_area.id)
+          : "",
+        contract_type_id: usuarioEditar.contract_type?.id
+          ? String(usuarioEditar.contract_type.id)
+          : "",
+        hierarchy_level_id: usuarioEditar.hierarchy_level?.id
+          ? String(usuarioEditar.hierarchy_level.id)
+          : "",
         manager_user_id: usuarioEditar.manager?.id
           ? String(usuarioEditar.manager.id)
           : "",
@@ -200,6 +220,9 @@ export default function UserFormModal({
         schedule_id: formulario.schedule_id || null,
         manager_user_id: formulario.manager_user_id || null,
         director_user_id: formulario.director_user_id || null,
+        operational_area_id: formulario.operational_area_id || null,
+        contract_type_id: formulario.contract_type_id || null,
+        hierarchy_level_id: formulario.hierarchy_level_id || null,
       };
 
       if (usuarioEditar) {
@@ -665,23 +688,9 @@ export default function UserFormModal({
                     placeholder="Buscar rol"
                     options={roles.map((item) => ({
                       value: item.name,
-                      label: item.name,
+                      label: traducirRol(item.name),
                     }))}
                   />
-
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Área operativa
-                    </label>
-                    <input
-                      className="w-full border border-gray-300 px-4 py-3 dark:border-gray-700"
-                      placeholder="Área operativa"
-                      value={formulario.operational_area}
-                      onChange={(e) =>
-                        actualizarCampo("operational_area", e.target.value)
-                      }
-                    />
-                  </div>
 
                   <div>
                     <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -697,33 +706,44 @@ export default function UserFormModal({
                     />
                   </div>
 
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Tipo de contrato
-                    </label>
-                    <input
-                      className="w-full border border-gray-300 px-4 py-3 dark:border-gray-700"
-                      placeholder="Ej. Planta, temporal, sindicalizado, confianza"
-                      value={formulario.contract_type}
-                      onChange={(e) =>
-                        actualizarCampo("contract_type", e.target.value)
-                      }
-                    />
-                  </div>
+                  <SearchSelect
+                    label="Área operativa"
+                    value={formulario.operational_area_id}
+                    onChange={(value) =>
+                      actualizarCampo("operational_area_id", value)
+                    }
+                    placeholder="Buscar área operativa"
+                    options={areasOperativas.map((item) => ({
+                      value: String(item.id),
+                      label: item.name,
+                    }))}
+                  />
 
-                  <div>
-                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Grado / jerarquía
-                    </label>
-                    <input
-                      className="w-full border border-gray-300 px-4 py-3 dark:border-gray-700"
-                      placeholder="Ej. Coordinador, jefe, gerente"
-                      value={formulario.hierarchy_level}
-                      onChange={(e) =>
-                        actualizarCampo("hierarchy_level", e.target.value)
-                      }
-                    />
-                  </div>
+                  <SearchSelect
+                    label="Tipo de contrato"
+                    value={formulario.contract_type_id}
+                    onChange={(value) =>
+                      actualizarCampo("contract_type_id", value)
+                    }
+                    placeholder="Buscar tipo de contrato"
+                    options={tiposContrato.map((item) => ({
+                      value: String(item.id),
+                      label: item.name,
+                    }))}
+                  />
+
+                  <SearchSelect
+                    label="Grado / jerarquía"
+                    value={formulario.hierarchy_level_id}
+                    onChange={(value) =>
+                      actualizarCampo("hierarchy_level_id", value)
+                    }
+                    placeholder="Buscar grado o jerarquía"
+                    options={jerarquias.map((item) => ({
+                      value: String(item.id),
+                      label: item.name,
+                    }))}
+                  />
 
                   <SearchSelect
                     label="Jefe directo"
@@ -831,8 +851,22 @@ export default function UserFormModal({
                       {formulario.role || "-"}
                     </p>
                     <p>
-                      <span className="font-medium">Centro de costo:</span>{" "}
-                      {formulario.cost_center || "-"}
+                      <span className="font-medium">Área operativa:</span>{" "}
+                      {areasOperativas.find(
+                        (x) => String(x.id) === formulario.operational_area_id,
+                      )?.name ?? "-"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Tipo de contrato:</span>{" "}
+                      {tiposContrato.find(
+                        (x) => String(x.id) === formulario.contract_type_id,
+                      )?.name ?? "-"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Jerarquía:</span>{" "}
+                      {jerarquias.find(
+                        (x) => String(x.id) === formulario.hierarchy_level_id,
+                      )?.name ?? "-"}
                     </p>
                   </div>
                 </div>

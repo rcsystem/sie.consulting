@@ -6,6 +6,7 @@ import type {
   UsuarioSistema,
 } from "../../types/users";
 import UserFormModal from "../../components/UserProfile/UserFormModal";
+import { traducirRol } from "../../utils/roles";
 
 export default function UsersPage() {
   const [usuarios, setUsuarios] = useState<UsuarioSistema[]>([]);
@@ -279,7 +280,7 @@ export default function UsersPage() {
                       </td>
                       <td className="px-4 py-4">{usuario.full_name}</td>
                       <td className="px-4 py-4">{usuario.email}</td>
-                      <td className="px-4 py-4">{usuario.role ?? "-"}</td>
+                      <td className="px-4 py-4">{traducirRol(usuario.role)}</td>
                       <td className="px-4 py-4">
                         {usuario.department?.name ?? "-"}
                       </td>
