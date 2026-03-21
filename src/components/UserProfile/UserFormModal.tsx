@@ -48,6 +48,11 @@ const estadoInicial: FormularioUsuario = {
   director_user_id: "",
   is_active: true,
   role: "",
+  rfc: "",
+  gender: "",
+  marital_status: "",
+  emergency_contact_name: "",
+  emergency_contact_phone: "",
 };
 
 const pasos = [
@@ -147,6 +152,11 @@ export default function UserFormModal({
         postal_code: usuarioEditar.postal_code ?? "",
         hire_date: usuarioEditar.hire_date ?? "",
         birth_date: usuarioEditar.birth_date ?? "",
+        rfc: usuarioEditar.rfc ?? "",
+        gender: usuarioEditar.gender ?? "",
+        marital_status: usuarioEditar.marital_status ?? "",
+        emergency_contact_name: usuarioEditar.emergency_contact_name ?? "",
+        emergency_contact_phone: usuarioEditar.emergency_contact_phone ?? "",
         department_id: usuarioEditar.department?.id
           ? String(usuarioEditar.department.id)
           : "",
@@ -522,6 +532,92 @@ export default function UserFormModal({
                     />
                   </div>
 
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      RFC
+                    </label>
+                    <input
+                      className="w-full border border-gray-300 px-4 py-3 uppercase dark:border-gray-700"
+                      placeholder="RFC"
+                      value={formulario.rfc}
+                      onChange={(e) =>
+                        actualizarCampo("rfc", e.target.value.toUpperCase())
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Género / sexo
+                    </label>
+                    <select
+                      className="w-full border border-gray-300 px-4 py-3 dark:border-gray-700 dark:bg-gray-900"
+                      value={formulario.gender}
+                      onChange={(e) =>
+                        actualizarCampo("gender", e.target.value)
+                      }
+                    >
+                      <option value="">Selecciona una opción</option>
+                      <option value="masculino">Masculino</option>
+                      <option value="femenino">Femenino</option>
+                      <option value="no_especificado">No especificado</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Estado civil
+                    </label>
+                    <select
+                      className="w-full border border-gray-300 px-4 py-3 dark:border-gray-700 dark:bg-gray-900"
+                      value={formulario.marital_status}
+                      onChange={(e) =>
+                        actualizarCampo("marital_status", e.target.value)
+                      }
+                    >
+                      <option value="">Selecciona una opción</option>
+                      <option value="soltero">Soltero(a)</option>
+                      <option value="casado">Casado(a)</option>
+                      <option value="divorciado">Divorciado(a)</option>
+                      <option value="viudo">Viudo(a)</option>
+                      <option value="union_libre">Unión libre</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Contacto de emergencia
+                    </label>
+                    <input
+                      className="w-full border border-gray-300 px-4 py-3 dark:border-gray-700"
+                      placeholder="Nombre del contacto"
+                      value={formulario.emergency_contact_name}
+                      onChange={(e) =>
+                        actualizarCampo(
+                          "emergency_contact_name",
+                          e.target.value,
+                        )
+                      }
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Teléfono de emergencia
+                    </label>
+                    <input
+                      className="w-full border border-gray-300 px-4 py-3 dark:border-gray-700"
+                      placeholder="Teléfono del contacto"
+                      value={formulario.emergency_contact_phone}
+                      onChange={(e) =>
+                        actualizarCampo(
+                          "emergency_contact_phone",
+                          e.target.value,
+                        )
+                      }
+                    />
+                  </div>
+
                   <div className="md:col-span-2">
                     <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Dirección
@@ -848,7 +944,7 @@ export default function UserFormModal({
                     </p>
                     <p>
                       <span className="font-medium">Rol:</span>{" "}
-                      {formulario.role || "-"}
+                      {traducirRol(formulario.role)}
                     </p>
                     <p>
                       <span className="font-medium">Área operativa:</span>{" "}
@@ -867,6 +963,30 @@ export default function UserFormModal({
                       {jerarquias.find(
                         (x) => String(x.id) === formulario.hierarchy_level_id,
                       )?.name ?? "-"}
+                    </p>
+                    <p>
+                      <span className="font-medium">RFC:</span>{" "}
+                      {formulario.rfc || "-"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Género / sexo:</span>{" "}
+                      {formulario.gender || "-"}
+                    </p>
+                    <p>
+                      <span className="font-medium">Estado civil:</span>{" "}
+                      {formulario.marital_status || "-"}
+                    </p>
+                    <p>
+                      <span className="font-medium">
+                        Contacto de emergencia:
+                      </span>{" "}
+                      {formulario.emergency_contact_name || "-"}
+                    </p>
+                    <p>
+                      <span className="font-medium">
+                        Teléfono de emergencia:
+                      </span>{" "}
+                      {formulario.emergency_contact_phone || "-"}
                     </p>
                   </div>
                 </div>

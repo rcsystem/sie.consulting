@@ -27,7 +27,6 @@ export interface UsuarioSistema {
   full_name: string;
 
   email: string;
-  business_email: string | null;
   personal_email: string | null;
 
   phone: string | null;

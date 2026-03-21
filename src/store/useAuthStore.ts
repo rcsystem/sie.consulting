@@ -16,7 +16,7 @@ type EstadoAuth = {
   autenticado: boolean;
 };
 
-export const useAuthStore = create<EstadoAuth>((set, get) => ({
+export const useAuthStore = create<EstadoAuth>((set) => ({
   token: localStorage.getItem("token"),
   usuario: null,
   rol: null,
