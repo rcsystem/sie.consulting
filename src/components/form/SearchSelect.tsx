@@ -28,23 +28,38 @@ export default function SearchSelect({
   const botonRef = useRef<HTMLButtonElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
 
+  const opcionesSeguras = useMemo(() => {
+    return (options ?? []).map((item) => ({
+      value: String(item?.value ?? ""),
+      label: String(item?.label ?? ""),
+    }));
+  }, [options]);
+
   const idBase = useMemo(
-    () => label.toLowerCase().replace(/[^a-z0-9]+/gi, "-").replace(/(^-|-$)/g, ""),
+    () =>
+      String(label ?? "select")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/gi, "-")
+        .replace(/(^-|-$)/g, ""),
     [label],
   );
 
   const opcionSeleccionada = useMemo(
-    () => options.find((item) => item.value === value) ?? null,
-    [options, value],
+    () =>
+      opcionesSeguras.find((item) => String(item.value) === String(value)) ??
+      null,
+    [opcionesSeguras, value],
   );
 
   const opcionesFiltradas = useMemo(() => {
     const texto = termino.trim().toLowerCase();
 
-    if (!texto) return options;
+    if (!texto) return opcionesSeguras;
 
-    return options.filter((item) => item.label.toLowerCase().includes(texto));
-  }, [options, termino]);
+    return opcionesSeguras.filter((item) =>
+      item.label.toLowerCase().includes(texto),
+    );
+  }, [opcionesSeguras, termino]);
 
   const actualizarPosicion = () => {
     if (!botonRef.current) return;
@@ -102,12 +117,12 @@ export default function SearchSelect({
           setTermino("");
           actualizarPosicion();
         }}
-        className="flex w-full items-center justify-between border border-gray-300 bg-white px-4 py-3 text-left text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+        className="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-4 py-3 text-left text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
         aria-haspopup="listbox"
         aria-expanded={abierto}
       >
         <span className={opcionSeleccionada ? "" : "text-gray-400"}>
-          {opcionSeleccionada?.label ?? placeholder}
+          {opcionSeleccionada?.label || placeholder}
         </span>
         <span className="text-gray-400">▾</span>
       </button>
@@ -116,7 +131,7 @@ export default function SearchSelect({
         ? createPortal(
             <div
               ref={panelRef}
-              className="fixed z-[1000000] border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900"
+              className="fixed z-[1000000] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900"
               style={{
                 top: rect.bottom + 4,
                 left: rect.left,
@@ -130,7 +145,7 @@ export default function SearchSelect({
                   value={termino}
                   onChange={(e) => setTermino(e.target.value)}
                   placeholder={placeholder}
-                  className="w-full border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
                 />
               </div>
 
@@ -151,11 +166,13 @@ export default function SearchSelect({
                           : "text-gray-700 dark:text-gray-200"
                       }`}
                     >
-                      {item.label}
+                      {item.label || "Sin descripción"}
                     </button>
                   ))
                 ) : (
-                  <div className="px-4 py-3 text-sm text-gray-500">Sin resultados</div>
+                  <div className="px-4 py-3 text-sm text-gray-500">
+                    Sin resultados
+                  </div>
                 )}
               </div>
             </div>,

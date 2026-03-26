@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import api from "../../lib/api";
 import DashboardMetrics from "../../components/dashboard/DashboardMetrics";
@@ -29,6 +29,49 @@ function obtenerNombreMes(month: number, year: number) {
   });
 }
 
+function formatearFechaLarga(fecha: string) {
+  return new Date(`${fecha}T00:00:00`).toLocaleDateString("es-MX", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function obtenerSaludoPorRol(rol?: string | null) {
+  switch ((rol ?? "").toLowerCase()) {
+    case "super_admin":
+      return {
+        saludo: "Panel ejecutivo del sistema",
+        descripcion: "Monitorea usuarios, autorizaciones y operación general desde un solo lugar.",
+      };
+    case "rh":
+      return {
+        saludo: "Centro de operación de Recursos Humanos",
+        descripcion: "Da seguimiento a colaboradores, autorizaciones y eventos del área.",
+      };
+    case "director":
+      return {
+        saludo: "Vista general de tu dirección",
+        descripcion: "Supervisa aprobaciones, actividad y eventos importantes de tu equipo.",
+      };
+    case "manager":
+      return {
+        saludo: "Panel de control de tu gerencia",
+        descripcion: "Gestiona solicitudes y seguimiento diario de tu equipo.",
+      };
+    case "unionized":
+      return {
+        saludo: "Resumen de tu cuenta",
+        descripcion: "Consulta tus solicitudes, eventos y accesos personales.",
+      };
+    default:
+      return {
+        saludo: "Bienvenido de nuevo",
+        descripcion: "Consulta tu actividad, eventos y accesos principales.",
+      };
+  }
+}
+
 export default function Home() {
   const actual = obtenerMesActual();
 
@@ -38,6 +81,7 @@ export default function Home() {
   const [calendarMonth, setCalendarMonth] = useState(actual.month);
   const [calendarYear, setCalendarYear] = useState(actual.year);
   const [calendarEvents, setCalendarEvents] = useState<DashboardEvent[]>([]);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [cargandoCalendario, setCargandoCalendario] = useState(false);
 
   useEffect(() => {
@@ -66,16 +110,14 @@ export default function Home() {
     setCargandoCalendario(true);
 
     try {
-      const { data } = await api.get<CalendarioRespuesta>(
-        "/dashboard/calendar",
-        {
-          params: { month, year },
-        },
-      );
+      const { data } = await api.get<CalendarioRespuesta>("/dashboard/calendar", {
+        params: { month, year },
+      });
 
       setCalendarMonth(data.month);
       setCalendarYear(data.year);
       setCalendarEvents(data.events);
+      setSelectedDate(null);
     } finally {
       setCargandoCalendario(false);
     }
@@ -105,9 +147,28 @@ export default function Home() {
     await cargarCalendario(nuevoMes, nuevoAnio);
   };
 
-  const proximosEventos = [...calendarEvents]
-    .sort((a, b) => a.date.localeCompare(b.date))
-    .slice(0, 6);
+  const eventosDelDiaSeleccionado = useMemo(() => {
+    if (!selectedDate) return [];
+    return calendarEvents.filter((evento) => evento.date === selectedDate);
+  }, [calendarEvents, selectedDate]);
+
+  const proximosEventos = useMemo(() => {
+    return [...calendarEvents]
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(0, 6);
+  }, [calendarEvents]);
+
+  const eventosParaMostrar =
+    selectedDate && eventosDelDiaSeleccionado.length > 0
+      ? eventosDelDiaSeleccionado
+      : proximosEventos;
+
+  const tituloEventos =
+    selectedDate && eventosDelDiaSeleccionado.length > 0
+      ? `Eventos del ${formatearFechaLarga(selectedDate)}`
+      : "Próximos eventos";
+
+  const saludo = obtenerSaludoPorRol(dashboard?.user.role);
 
   return (
     <>
@@ -128,16 +189,16 @@ export default function Home() {
         <div className="space-y-6">
           <section className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-              Bienvenido de nuevo
+              {saludo.saludo}
             </p>
             <h1 className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
               {dashboard.user.full_name}
             </h1>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              Rol:{" "}
-              <span className="font-semibold">
-                {traducirRol(dashboard.user.role)}
-              </span>
+              {saludo.descripcion}
+            </p>
+            <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+              Rol: <span className="font-semibold">{traducirRol(dashboard.user.role)}</span>
               {" · "}
               Departamento: {dashboard.user.department ?? "Sin departamento"}
               {" · "}
@@ -188,10 +249,11 @@ export default function Home() {
                   month={calendarMonth}
                   year={calendarYear}
                   events={calendarEvents}
+                  onSelectDate={setSelectedDate}
                 />
               </div>
 
-              <UpcomingEventsCard events={proximosEventos} />
+              <UpcomingEventsCard events={eventosParaMostrar} titulo={tituloEventos} />
             </div>
           </div>
         </div>

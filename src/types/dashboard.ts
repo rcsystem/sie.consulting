@@ -9,7 +9,7 @@ export interface DashboardEvent {
   date: string;
   title: string;
   type: string;
-  color: string;
+  color?: string;
   department?: string | null;
   description?: string | null;
 }

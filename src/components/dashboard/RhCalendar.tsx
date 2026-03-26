@@ -5,6 +5,7 @@ type Props = {
   month: number;
   year: number;
   events: DashboardEvent[];
+  onSelectDate?: (fecha: string | null) => void;
 };
 
 type DiaCalendario = {
@@ -84,7 +85,12 @@ function generarMatrizMes(month: number, year: number): DiaCalendario[] {
   return dias;
 }
 
-export default function RhCalendar({ month, year, events }: Props) {
+export default function RhCalendar({
+  month,
+  year,
+  events,
+  onSelectDate,
+}: Props) {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const eventsByDate = useMemo(() => {
@@ -106,6 +112,7 @@ export default function RhCalendar({ month, year, events }: Props) {
 
     if (fechaHoyVisible && eventsByDate[fechaHoyVisible]) {
       setSelectedDate(fechaHoyVisible);
+      onSelectDate?.(fechaHoyVisible);
       return;
     }
 
@@ -113,8 +120,10 @@ export default function RhCalendar({ month, year, events }: Props) {
       (dia) => dia.esMesActual && eventsByDate[dia.fechaTexto],
     );
 
-    setSelectedDate(primerDiaConEvento?.fechaTexto ?? null);
-  }, [month, year, eventsByDate, dias]);
+    const fechaInicial = primerDiaConEvento?.fechaTexto ?? null;
+    setSelectedDate(fechaInicial);
+    onSelectDate?.(fechaInicial);
+  }, [month, year, eventsByDate, dias, onSelectDate]);
 
   return (
     <div>
@@ -131,13 +140,17 @@ export default function RhCalendar({ month, year, events }: Props) {
           const tieneEventos = Boolean(eventsByDate[dia.fechaTexto]?.length);
           const esSeleccionado = selectedDate === dia.fechaTexto;
           const esHoy =
-            dia.fechaTexto === formatearFechaLocal(new Date()) && dia.esMesActual;
+            dia.fechaTexto === formatearFechaLocal(new Date()) &&
+            dia.esMesActual;
 
           return (
             <button
               key={dia.fechaTexto}
               type="button"
-              onClick={() => setSelectedDate(dia.fechaTexto)}
+              onClick={() => {
+                setSelectedDate(dia.fechaTexto);
+                onSelectDate?.(dia.fechaTexto);
+              }}
               className={[
                 "group min-h-[40px] rounded-xl p-1 text-center transition-all",
                 dia.esMesActual

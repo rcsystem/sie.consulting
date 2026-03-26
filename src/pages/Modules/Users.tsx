@@ -10,6 +10,22 @@ import type {
 import UserFormModal from "../../components/UserProfile/UserFormModal";
 import { traducirRol } from "../../utils/roles";
 
+type ErrorImportacion = {
+  fila?: number | string;
+  campo?: string;
+  mensaje: string;
+};
+
+type RespuestaImportacion = {
+  mensaje: string;
+  resumen: {
+    creados: number;
+    actualizados: number;
+    errores: number;
+  };
+  errores: ErrorImportacion[];
+};
+
 export default function UsersPage() {
   const [usuarios, setUsuarios] = useState<UsuarioSistema[]>([]);
   const [roles, setRoles] = useState<RolSistema[]>([]);
@@ -134,9 +150,25 @@ export default function UsersPage() {
     setModalAbierto(true);
   };
 
-  const abrirEditar = (usuario: UsuarioSistema) => {
-    setUsuarioEditar(usuario);
-    setModalAbierto(true);
+  const abrirEditar = async (usuario: UsuarioSistema) => {
+    try {
+      const response = await api.get(`/users/${usuario.id}`, {
+        headers: {
+          Accept: "application/json",
+        },
+      });
+
+      setUsuarioEditar(response.data.user); // 🔥 AQUÍ está la clave
+      setModalAbierto(true);
+    } catch (error) {
+      console.error("No fue posible cargar el detalle del usuario.", error);
+      alert("No fue posible abrir el usuario para edición.");
+    }
+  };
+
+  const cerrarModal = () => {
+    setModalAbierto(false);
+    setUsuarioEditar(null); // 🔥 importante
   };
 
   const cambiarEstatus = async (usuario: UsuarioSistema) => {
@@ -144,119 +176,86 @@ export default function UsersPage() {
     await cargarUsuarios(paginaActual, porPagina);
   };
 
-  const descargarPlantilla = () => {
-    const encabezados = [
-      "employee_number",
-      "first_name",
-      "last_name",
-      "middle_name",
-      "email",
-      "personal_email",
-      "phone",
-      "mobile_phone",
-      "address",
-      "neighborhood",
-      "city",
-      "state",
-      "postal_code",
-      "social_security_number",
-      "curp",
-      "rfc",
-      "gender",
-      "marital_status",
-      "emergency_contact_name",
-      "emergency_contact_phone",
-      "hire_date",
-      "birth_date",
-      "department_id",
-      "position_id",
-      "schedule_id",
-      "operational_area_id",
-      "contract_type_id",
-      "hierarchy_level_id",
-      "cost_center",
-      "manager_user_id",
-      "director_user_id",
-      "role",
-      "is_active",
-      "password",
-      "password_confirmation",
-    ];
+  const [archivo, setArchivo] = useState<File | null>(null);
+  const [errorImportacion, setErrorImportacion] = useState<string | null>(null);
+  const [resultadoImportacion, setResultadoImportacion] =
+    useState<RespuestaImportacion | null>(null);
+  const [descargandoPlantilla, setDescargandoPlantilla] = useState(false);
 
-    const ejemplo = [
-      "0007",
-      "Juan",
-      "Perez",
-      "Lopez",
-      "juan@empresa.com",
-      "juan.personal@gmail.com",
-      "5555555555",
-      "5555555556",
-      "Av Principal 123",
-      "Centro",
-      "CDMX",
-      "CDMX",
-      "54000",
-      "12345678901",
-      "PELJ900101HDFRPN01",
-      "PELJ900101ABC",
-      "masculino",
-      "soltero",
-      "Maria Perez",
-      "5551234567",
-      "2026-03-15",
-      "1990-01-10",
-      "1",
-      "1",
-      "1",
-      "1",
-      "1",
-      "1",
-      "CC-001",
-      "",
-      "",
-      "administrative",
-      "1",
-      "Admin12345",
-      "Admin12345",
-    ];
+  const descargarPlantilla = async () => {
+    try {
+      setDescargandoPlantilla(true);
+      setErrorImportacion(null);
 
-    const csv = [encabezados.join(","), ejemplo.join(",")].join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
+      const response = await api.get("/users/import/template", {
+        responseType: "blob",
+        headers: {
+          Accept: "application/json",
+        },
+      });
 
-    const enlace = document.createElement("a");
-    enlace.href = url;
-    enlace.setAttribute("download", "plantilla_usuarios.csv");
-    document.body.appendChild(enlace);
-    enlace.click();
-    document.body.removeChild(enlace);
+      const blob = new Blob([response.data], {
+        type:
+          response.headers["content-type"] ??
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+
+      const enlace = document.createElement("a");
+      enlace.href = url;
+      enlace.setAttribute("download", "plantilla_usuarios.xlsx");
+      document.body.appendChild(enlace);
+      enlace.click();
+      document.body.removeChild(enlace);
+      window.URL.revokeObjectURL(url);
+    } catch (error: any) {
+      setErrorImportacion(
+        error?.response?.data?.message ||
+          "No fue posible descargar la plantilla.",
+      );
+    } finally {
+      setDescargandoPlantilla(false);
+    }
   };
 
   const seleccionarArchivo = () => {
     inputArchivoRef.current?.click();
   };
 
-  const subirArchivo = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const archivo = event.target.files?.[0];
-    if (!archivo) return;
+  const cambiarArchivo = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const archivoSeleccionado = event.target.files?.[0] ?? null;
+    setArchivo(archivoSeleccionado);
+    setErrorImportacion(null);
+    setResultadoImportacion(null);
+  };
+
+  const subirArchivo = async () => {
+    if (!archivo) {
+      setErrorImportacion("Selecciona un archivo Excel antes de continuar.");
+      return;
+    }
 
     setSubiendo(true);
 
     try {
       const formData = new FormData();
-      formData.append("file", archivo);
+      formData.append("archivo", archivo);
 
-      await api.post("/users/import", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
+      const { data } = await api.post<RespuestaImportacion>(
+        "/users/import",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Accept: "application/json",
+          },
         },
-      });
+      );
 
+      setResultadoImportacion(data);
       await cargarUsuarios(1, porPagina);
-      alert("Archivo procesado correctamente.");
     } catch (error: any) {
-      alert(
+      setErrorImportacion(
         error?.response?.data?.message || "No fue posible importar el archivo.",
       );
     } finally {
@@ -264,44 +263,70 @@ export default function UsersPage() {
       if (inputArchivoRef.current) {
         inputArchivoRef.current.value = "";
       }
+      setArchivo(null);
     }
   };
 
+  const limpiarImportacion = () => {
+    setArchivo(null);
+    setErrorImportacion(null);
+    setResultadoImportacion(null);
+    if (inputArchivoRef.current) {
+      inputArchivoRef.current.value = "";
+    }
+  };
+
+  
   return (
     <>
       <PageMeta
-        title="Usuarios | SIE RH"
+        title="Usuarios | SIE"
         description="Administración de usuarios"
       />
 
       <div className="space-y-6">
         <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+            <div className="min-w-0">
+              <h1 className="text-3xl font-semibold text-slate-900">
                 Usuarios
               </h1>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              <p className="mt-2 max-w-2xl text-sm text-slate-500">
                 Alta, edición, activación, consulta e importación masiva de
                 usuarios.
               </p>
             </div>
 
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex flex-wrap items-center gap-3 xl:justify-end">
               <button
+                type="button"
                 onClick={descargarPlantilla}
-                className="border border-gray-300 px-5 py-3 text-sm font-medium text-gray-700 dark:border-gray-700 dark:text-gray-200"
+                disabled={descargandoPlantilla}
+                className="border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 dark:border-gray-700 dark:text-gray-200 disabled:opacity-60"
               >
-                Descargar plantilla
+                {descargandoPlantilla
+                  ? "Descargando..."
+                  : "Descargar plantilla"}
               </button>
 
               <button
+                type="button"
                 onClick={seleccionarArchivo}
                 disabled={subiendo}
                 className="border border-gray-300 px-5 py-3 text-sm font-medium text-gray-700 dark:border-gray-700 dark:text-gray-200 disabled:opacity-60"
               >
                 {subiendo ? "Subiendo..." : "Importar Excel"}
               </button>
+
+              <button
+                type="button"
+                onClick={subirArchivo}
+                disabled={!archivo || subiendo}
+                className="border border-brand-500 bg-brand-500 px-5 py-3 text-sm font-medium text-white disabled:opacity-60"
+              >
+                {subiendo ? "Procesando..." : "Subir usuarios"}
+              </button>
+
               <button
                 type="button"
                 onClick={exportarUsuarios}
@@ -311,6 +336,7 @@ export default function UsersPage() {
               </button>
 
               <button
+                type="button"
                 onClick={abrirNuevo}
                 className="bg-brand-500 px-5 py-3 text-sm font-semibold text-white"
               >
@@ -322,17 +348,106 @@ export default function UsersPage() {
                 type="file"
                 accept=".xlsx,.xls,.csv"
                 className="hidden"
-                onChange={subirArchivo}
+                onChange={cambiarArchivo}
               />
             </div>
           </div>
+
+          {archivo ? (
+            <div className="mt-4 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-700 dark:border-gray-700 dark:bg-white/[0.02] dark:text-gray-300">
+              Archivo seleccionado:{" "}
+              <span className="font-medium">{archivo.name}</span>
+            </div>
+          ) : null}
+
+          {errorImportacion ? (
+            <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900 dark:bg-red-500/10 dark:text-red-300">
+              {errorImportacion}
+            </div>
+          ) : null}
+
+          {resultadoImportacion ? (
+            <div className="mt-4 rounded-2xl border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-500/10">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <h2 className="text-sm font-semibold text-green-800 dark:text-green-300">
+                    Resultado de la importación
+                  </h2>
+                  <p className="mt-1 text-sm text-green-700 dark:text-green-400">
+                    {resultadoImportacion.mensaje}
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={limpiarImportacion}
+                  className="border border-green-300 px-4 py-2 text-sm font-medium text-green-700 dark:border-green-800 dark:text-green-300"
+                >
+                  Limpiar resultado
+                </button>
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl border border-green-200 bg-white p-4 dark:border-green-900 dark:bg-white/[0.03]">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Creados
+                  </p>
+                  <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
+                    {resultadoImportacion.resumen.creados}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-green-200 bg-white p-4 dark:border-green-900 dark:bg-white/[0.03]">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Actualizados
+                  </p>
+                  <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
+                    {resultadoImportacion.resumen.actualizados}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-green-200 bg-white p-4 dark:border-green-900 dark:bg-white/[0.03]">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Errores
+                  </p>
+                  <p className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
+                    {resultadoImportacion.resumen.errores}
+                  </p>
+                </div>
+              </div>
+
+              {resultadoImportacion.errores.length > 0 ? (
+                <div className="mt-4 space-y-3">
+                  {resultadoImportacion.errores.map((item, index) => (
+                    <div
+                      key={`${item.fila ?? "sin-fila"}-${index}`}
+                      className="rounded-2xl border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-800 dark:border-yellow-900 dark:bg-yellow-500/10 dark:text-yellow-300"
+                    >
+                      <p>
+                        <span className="font-semibold">Fila:</span>{" "}
+                        {item.fila ?? "-"}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Campo:</span>{" "}
+                        {item.campo ?? "-"}
+                      </p>
+                      <p>
+                        <span className="font-semibold">Mensaje:</span>{" "}
+                        {item.mensaje}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
 
           <form
             onSubmit={buscar}
             className="mt-6 grid grid-cols-1 gap-3 lg:grid-cols-5 min-w-full text-left text-sm text-gray-800 dark:text-gray-100"
           >
             <input
-              className="w-full border border-gray-300 px-4 py-3 dark:border-gray-700 dark:bg-gray-900"
+              className="h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500"
               placeholder="Buscar por nombre, correo, RFC, CURP o empleado"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
@@ -377,7 +492,7 @@ export default function UsersPage() {
             <div className="flex gap-3">
               <button
                 type="submit"
-                className="w-full border border-gray-300 px-5 py-3 text-sm font-medium"
+                className="inline-flex h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
               >
                 Buscar
               </button>
@@ -385,7 +500,7 @@ export default function UsersPage() {
               <button
                 type="button"
                 onClick={limpiarFiltros}
-                className="w-full border border-gray-300 px-5 py-3 text-sm font-medium"
+                className="inline-flex h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
               >
                 Limpiar
               </button>
@@ -545,7 +660,7 @@ export default function UsersPage() {
 
       <UserFormModal
         abierto={modalAbierto}
-        onClose={() => setModalAbierto(false)}
+        onClose={cerrarModal}
         onGuardado={() => cargarUsuarios(paginaActual, porPagina)}
         usuarioEditar={usuarioEditar}
       />

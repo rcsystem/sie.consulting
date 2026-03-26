@@ -84,6 +84,20 @@ export default function UserFormModal({
   const [error, setError] = useState("");
   const [pasoActual, setPasoActual] = useState(1);
   const [erroresLista, setErroresLista] = useState<string[]>([]);
+  const [renderizar, setRenderizar] = useState(abierto);
+
+  useEffect(() => {
+    if (abierto) {
+      setRenderizar(true);
+      return;
+    }
+
+    const temporizador = setTimeout(() => {
+      setRenderizar(false);
+    }, 300);
+
+    return () => clearTimeout(temporizador);
+  }, [abierto]);
 
   useEffect(() => {
     if (!abierto) return;
@@ -137,7 +151,7 @@ export default function UserFormModal({
         first_name: usuarioEditar.first_name ?? "",
         last_name: usuarioEditar.last_name ?? "",
         middle_name: usuarioEditar.middle_name ?? "",
-        email: usuarioEditar.email,
+        email: usuarioEditar.email ?? "",
         personal_email: usuarioEditar.personal_email ?? "",
         social_security_number: usuarioEditar.social_security_number ?? "",
         curp: usuarioEditar.curp ?? "",
@@ -190,6 +204,7 @@ export default function UserFormModal({
     }
 
     setError("");
+    setErroresLista([]);
   }, [abierto, usuarioEditar]);
 
   const actualizarCampo = (
@@ -218,8 +233,6 @@ export default function UserFormModal({
     e?.preventDefault();
     setError("");
     setGuardando(true);
-
-    setError("");
     setErroresLista([]);
 
     try {
@@ -254,7 +267,6 @@ export default function UserFormModal({
       if (erroresBackend && typeof erroresBackend === "object") {
         const lista = Object.values(erroresBackend).flat() as string[];
         setErroresLista(lista);
-
         setError(
           error?.response?.data?.message ||
             "Hay errores en el formulario. Revisa los campos marcados.",
@@ -281,7 +293,7 @@ export default function UserFormModal({
       .filter((usuario) => !usuarioEditar || usuario.id !== usuarioEditar.id)
       .map((usuario) => ({
         value: String(usuario.id),
-        label: `${usuario.full_name} (${usuario.role ?? "sin rol"})`,
+        label: `${usuario.full_name ?? usuario.name ?? usuario.email ?? "Usuario"} (${usuario.role ?? "sin rol"})`,
       }));
   }, [usuariosRelacionados, usuarioEditar]);
 
@@ -293,11 +305,11 @@ export default function UserFormModal({
       .filter((usuario) => !usuarioEditar || usuario.id !== usuarioEditar.id)
       .map((usuario) => ({
         value: String(usuario.id),
-        label: `${usuario.full_name} (${usuario.role ?? "sin rol"})`,
+        label: `${usuario.full_name ?? usuario.name ?? usuario.email ?? "Usuario"} (${usuario.role ?? "sin rol"})`,
       }));
   }, [usuariosRelacionados, usuarioEditar]);
 
-  if (!abierto) return null;
+  if (!renderizar) return null;
 
   return (
     <div

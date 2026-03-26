@@ -38,13 +38,11 @@ export const navItems: NavItem[] = [
   },
   {
     icon: <PageIcon />,
-    name: "Operación",
+    name: "Permisos",
     subItems: [
-      { name: "Permisos", path: "/permisos" },
       {
-        name: "Autorizaciones",
-        path: "/autorizaciones",
-        roles: ["super_admin", "rh", "director", "manager"],
+        name: "Permisos",
+        path: "/permisos",
       },
       {
         name: "Inasistencias",
