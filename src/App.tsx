@@ -19,7 +19,9 @@ import MyProfilePage from "./pages/Profile/MyProfile";
 import ChangePasswordPage from "./pages/Profile/ChangePassword";
 import { useAuthStore } from "./store/useAuthStore";
 import ImportUsers from "./pages/Users/ImportUsers";
-import PermissionRequestsPage from "./pages/Modules/PermissionRequestsPage";
+
+import MyPermissionRequestsPage from "./pages/Modules/MyPermissionRequestsPage";
+import AuthorizePermissionRequestsPage from "./pages/Modules/AuthorizePermissionRequestsPage";
 
 
 export default function App() {
@@ -54,7 +56,15 @@ export default function App() {
               path="/cambiar-contrasena"
               element={<ChangePasswordPage />}
             />
-            <Route path="/permisos" element={<PermissionRequestsPage />} />
+
+            <Route
+              path="/mis-permisos"
+              element={<MyPermissionRequestsPage />}
+            />
+            <Route
+              path="/autorizar-permisos"
+              element={<AuthorizePermissionRequestsPage />}
+            />
           </Route>
         </Route>
 

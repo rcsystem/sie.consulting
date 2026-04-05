@@ -1,6 +1,10 @@
 import { create } from "zustand";
 import api from "../lib/api";
-import type { RespuestaLogin, RespuestaMe, UsuarioAutenticado } from "../types/auth";
+import type {
+  RespuestaLogin,
+  RespuestaMe,
+  UsuarioAutenticado,
+} from "../types/auth";
 
 type EstadoAuth = {
   token: string | null;

@@ -173,8 +173,8 @@ export default function Home() {
   return (
     <>
       <PageMeta
-        title="Dashboard RH | SIE RH"
-        description="Resumen principal del sistema RH"
+        title="Dashboard | SIE"
+        description="Resumen principal del sistema SIE para Recursos Humanos, con métricas clave, accesos rápidos y calendario de eventos."
       />
 
       {cargando ? (
@@ -198,7 +198,10 @@ export default function Home() {
               {saludo.descripcion}
             </p>
             <p className="mt-3 text-sm text-gray-600 dark:text-gray-400">
-              Rol: <span className="font-semibold">{traducirRol(dashboard.user.role)}</span>
+              Rol:{" "}
+              <span className="font-semibold">
+                {traducirRol(dashboard.user.role)}
+              </span>
               {" · "}
               Departamento: {dashboard.user.department ?? "Sin departamento"}
               {" · "}
@@ -253,7 +256,10 @@ export default function Home() {
                 />
               </div>
 
-              <UpcomingEventsCard events={eventosParaMostrar} titulo={tituloEventos} />
+              <UpcomingEventsCard
+                events={eventosParaMostrar}
+                titulo={tituloEventos}
+              />
             </div>
           </div>
         </div>

@@ -12,6 +12,8 @@ type Props = {
   solicitud: SolicitudPermiso | null;
 };
 
+
+
 export default function RejectPermissionRequestModal({
   abierto,
   onClose,
@@ -21,13 +23,21 @@ export default function RejectPermissionRequestModal({
   const [motivo, setMotivo] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState("");
-  const [renderizar, setRenderizar] = useState(abierto);
+  const [renderizar, setRenderizar] = useState(false);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (abierto) {
       setRenderizar(true);
-      return;
+
+      const frame = requestAnimationFrame(() => {
+        setVisible(true);
+      });
+
+      return () => cancelAnimationFrame(frame);
     }
+
+    setVisible(false);
 
     const temporizador = setTimeout(() => {
       setRenderizar(false);
@@ -75,19 +85,19 @@ export default function RejectPermissionRequestModal({
   return (
     <div
       className={`fixed inset-0 z-[999999] ${
-        abierto ? "pointer-events-auto" : "pointer-events-none"
+        visible ? "pointer-events-auto" : "pointer-events-none"
       }`}
     >
       <div
         className={`absolute inset-0 bg-black/40 transition-opacity duration-300 ${
-          abierto ? "opacity-100" : "opacity-0"
+          visible ? "opacity-100" : "opacity-0"
         }`}
         onClick={onClose}
       />
 
       <div
-        className={`absolute top-0 right-0 flex h-full w-full max-w-2xl flex-col bg-white shadow-2xl transition-transform duration-300 ease-out dark:bg-gray-900 ${
-          abierto ? "translate-x-0" : "translate-x-full"
+        className={`absolute top-0 right-0 flex h-full w-full max-w-3xl flex-col bg-white shadow-2xl transition-transform duration-300 ease-out dark:bg-gray-900 ${
+          visible ? "translate-x-0" : "translate-x-full"
         }`}
       >
         <div className="flex items-center justify-between border-b border-gray-200 bg-red-500 px-6 py-4 text-white">

@@ -185,14 +185,11 @@ const AppSidebar: React.FC = () => {
           {isExpanded || isHovered || isMobileOpen ? (
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-500 text-lg font-bold text-white">
-                RH
+                SIE
               </div>
               <div>
                 <p className="text-sm font-semibold text-gray-900 dark:text-white">
                   SIE RH
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  TailAdmin adaptado
                 </p>
               </div>
             </div>

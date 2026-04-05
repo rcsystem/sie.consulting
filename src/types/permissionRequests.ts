@@ -17,7 +17,7 @@ export type SolicitudPermiso = {
   exit_time: string | null;
   days_count: string | number | null;
   reason: string;
-  comments: string | null;
+
   status: "pendiente" | "aprobado" | "rechazado" | "cancelado";
   approved_by_role: string | null;
   approved_at: string | null;
@@ -29,6 +29,17 @@ export type SolicitudPermiso = {
   canceller?: UsuarioPermiso | null;
   created_at?: string | null;
   updated_at?: string | null;
+};
+
+export type SolicitudPermisoPayload = {
+  user_id?: number;
+  request_kind: "entrada" | "salida" | "inasistencia";
+  date?: string;
+  start_date?: string;
+  end_date?: string;
+  entry_time?: string;
+  exit_time?: string;
+  reason: string;
 };
 
 export type RespuestaPaginadaSolicitudesPermiso = {

@@ -10,6 +10,7 @@ import {
 
 export type RolSistema =
   | "super_admin"
+  | "admin"
   | "rh"
   | "director"
   | "manager"
@@ -41,13 +42,13 @@ export const navItems: NavItem[] = [
     name: "Permisos",
     subItems: [
       {
-        name: "Permisos",
-        path: "/permisos",
+        name: "Mis permisos",
+        path: "/mis-permisos",
       },
       {
-        name: "Inasistencias",
-        path: "/inasistencias",
-        roles: ["super_admin", "rh", "director", "manager"],
+        name: "Autorizar permisos",
+        path: "/autorizar-permisos",
+        roles: ["super_admin", "admin", "rh"],
       },
     ],
   },

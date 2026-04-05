@@ -17,18 +17,29 @@ type UsuarioActual = {
   email?: string | null;
 };
 
+type ResumenPermisos = {
+  pendientes: number;
+  aprobados_mes: number;
+  rechazados_mes: number;
+  cuatro_permisos_mes: number;
+};
+
 const tabsEstatus = [
   { value: "", label: "Todos" },
   { value: "pendiente", label: "Pendientes" },
   { value: "aprobado", label: "Aprobados" },
   { value: "rechazado", label: "Rechazados" },
   { value: "cancelado", label: "Cancelados" },
+  { value: "mis_permisos", label: "Mis permisos" },
 ];
 
 export default function PermissionRequestsPage() {
   const [solicitudes, setSolicitudes] = useState<SolicitudPermiso[]>([]);
   const [usuarios, setUsuarios] = useState<UsuarioSistema[]>([]);
-  const [usuarioActual, setUsuarioActual] = useState<UsuarioActual | null>(null);
+  const [usuarioActual, setUsuarioActual] = useState<UsuarioActual | null>(
+    null,
+  );
+  const [resumen, setResumen] = useState<ResumenPermisos | null>(null);
   const [cargando, setCargando] = useState(false);
 
   const [search, setSearch] = useState("");
@@ -55,7 +66,7 @@ export default function PermissionRequestsPage() {
     "inline-flex h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white";
 
   const claseBotonPrimario =
-    "inline-flex h-11 items-center justify-center rounded-lg bg-brand-500 px-4 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-60";
+    "inline-flex h-11 items-center justify-center rounded-sm bg-brand-500 px-2 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-60";
 
   const puedeVerTodos =
     usuarioActual?.role === "rh" ||
@@ -68,6 +79,15 @@ export default function PermissionRequestsPage() {
     usuarioActual?.role === "director";
 
   const puedeCapturarParaOtros = puedeVerTodos;
+
+  const cargarResumen = async () => {
+    try {
+      const { data } = await api.get("/permission-requests/summary");
+      setResumen(data);
+    } catch (error) {
+      console.error("No fue posible cargar el resumen.", error);
+    }
+  };
 
   const cargarUsuarioActual = async () => {
     try {
@@ -101,33 +121,59 @@ export default function PermissionRequestsPage() {
     }
   };
 
-  const cargarSolicitudes = async (pagina = paginaActual, limite = porPagina) => {
+  const cargarSolicitudes = async (
+    pagina = paginaActual,
+    limite = porPagina,
+    overrides?: {
+      search?: string;
+      status?: string;
+      employeeType?: string;
+      requestKind?: string;
+      userId?: string;
+      dateFrom?: string;
+      dateTo?: string;
+    },
+  ) => {
+    const searchFinal = overrides?.search ?? search;
+    const statusFinal = overrides?.status ?? status;
+    const employeeTypeFinal = overrides?.employeeType ?? employeeType;
+    const requestKindFinal = overrides?.requestKind ?? requestKind;
+    const userIdFinal = overrides?.userId ?? userId;
+    const dateFromFinal = overrides?.dateFrom ?? dateFrom;
+    const dateToFinal = overrides?.dateTo ?? dateTo;
+
     setCargando(true);
 
     try {
-      const { data } =
-        await api.get<RespuestaPaginadaSolicitudesPermiso>("/permission-requests", {
-          params: {
-            search: search || undefined,
-            status: status || undefined,
-            employee_type: employeeType || undefined,
-            request_kind: requestKind || undefined,
-            user_id: puedeVerTodos ? userId || undefined : undefined,
-            date_from: dateFrom || undefined,
-            date_to: dateTo || undefined,
-            page: pagina,
-            per_page: limite,
-          },
-        });
+      const params: Record<string, unknown> = {
+        search: searchFinal || undefined,
+        employee_type: employeeTypeFinal || undefined,
+        request_kind: requestKindFinal || undefined,
+        user_id: puedeVerTodos ? userIdFinal || undefined : undefined,
+        date_from: dateFromFinal || undefined,
+        date_to: dateToFinal || undefined,
+        page: pagina,
+        per_page: limite,
+      };
 
-      setSolicitudes(data.data);
-      setPaginaActual(data.current_page);
-      setUltimaPagina(data.last_page);
-      setTotal(data.total);
-      setDesde(data.from ?? null);
-      setHasta(data.to ?? null);
-    } catch (error) {
-      console.error("No fue posible cargar solicitudes.", error);
+      if (statusFinal === "mis_permisos") {
+        params.solo_mios = 1;
+      } else {
+        params.status = statusFinal || undefined;
+      }
+
+      const { data } = await api.get("/permission-requests", { params });
+
+      const filas = data.data ?? [];
+      const meta = data.meta ?? {};
+
+      setSolicitudes(filas);
+      setPaginaActual(meta.current_page ?? 1);
+      setUltimaPagina(meta.last_page ?? 1);
+      setTotal(meta.total ?? filas.length);
+      setDesde(meta.from ?? (filas.length ? 1 : 0));
+      setHasta(meta.to ?? filas.length);
+      console.log("respuesta permission-requests:", data);
     } finally {
       setCargando(false);
     }
@@ -135,6 +181,7 @@ export default function PermissionRequestsPage() {
 
   useEffect(() => {
     cargarUsuarioActual();
+    cargarResumen();
   }, []);
 
   useEffect(() => {
@@ -160,17 +207,30 @@ export default function PermissionRequestsPage() {
     setUserId("");
     setDateFrom("");
     setDateTo("");
-    await cargarSolicitudes(1, porPagina);
+
+    await cargarSolicitudes(1, porPagina, {
+      search: "",
+      status: "",
+      employeeType: "",
+      requestKind: "",
+      userId: "",
+      dateFrom: "",
+      dateTo: "",
+    });
+
+    await cargarResumen();
   };
 
   const aprobar = async (solicitud: SolicitudPermiso) => {
     await api.patch(`/permission-requests/${solicitud.id}/approve`, {});
     await cargarSolicitudes(paginaActual, porPagina);
+    await cargarResumen();
   };
 
   const cancelar = async (solicitud: SolicitudPermiso) => {
     await api.patch(`/permission-requests/${solicitud.id}/cancel`);
     await cargarSolicitudes(paginaActual, porPagina);
+    await cargarResumen();
   };
 
   const abrirRechazo = (solicitud: SolicitudPermiso) => {
@@ -185,38 +245,20 @@ export default function PermissionRequestsPage() {
     );
   };
 
-  const puedeAprobarSolicitud = (solicitud: SolicitudPermiso) => {
-    return solicitud.status === "pendiente" && puedeAutorizar;
-  };
-
-  const onAprobarTabla = puedeAutorizar
-    ? (solicitud: SolicitudPermiso) => aprobar(solicitud)
-    : undefined;
-
-  const onRechazarTabla = puedeAutorizar
-    ? (solicitud: SolicitudPermiso) => abrirRechazo(solicitud)
-    : undefined;
-
-  const onCancelarTabla = (solicitud: SolicitudPermiso) =>
-    puedeCancelarSolicitud(solicitud) ? cancelar(solicitud) : undefined;
-
   return (
     <>
       <PageMeta
-        title="Permisos | SIE"
+        title="Gestión de Permisos | SIE"
         description="Gestión unificada de solicitudes de permiso"
       />
 
       <div className="space-y-6">
         <div className="rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-white/[0.03]">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-            <div className="min-w-0">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
               <h1 className="text-3xl font-semibold text-slate-900 dark:text-white">
-                Permisos
+                Gestión de Permisos
               </h1>
-              <p className="mt-2 max-w-2xl text-sm text-slate-500 dark:text-slate-400">
-                Consulta, registra y autoriza permisos desde una sola vista.
-              </p>
             </div>
 
             <button
@@ -224,35 +266,43 @@ export default function PermissionRequestsPage() {
               onClick={() => setModalNuevoAbierto(true)}
               className={claseBotonPrimario}
             >
-              Nueva solicitud
+              + Generar Nuevo Permiso
             </button>
           </div>
 
-          <div className="mt-6 grid grid-cols-1 gap-3 lg:grid-cols-5">
-            {tabsEstatus.map((tab) => {
-              const activo = status === tab.value;
+          <div className="mt-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex flex-wrap gap-2 rounded-xl bg-gray-100 p-2 dark:bg-gray-800">
+              {tabsEstatus.map((tab) => {
+                const activo = status === tab.value;
 
-              return (
-                <button
-                  key={tab.label}
-                  type="button"
-                  onClick={async () => {
-                    setStatus(tab.value);
-                    await cargarSolicitudes(1, porPagina);
-                  }}
-                  className={`flex items-center justify-center rounded-lg border px-4 py-3 text-sm font-semibold transition ${
-                    activo
-                      ? "border-brand-500 bg-brand-500 text-white"
-                      : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
+                return (
+                  <button
+                    key={tab.label}
+                    type="button"
+                    onClick={async () => {
+                      const nuevoStatus = tab.value;
+                      setStatus(nuevoStatus);
+                      await cargarSolicitudes(1, porPagina, {
+                        status: nuevoStatus,
+                      });
+                    }}
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+                      activo
+                        ? "bg-white text-brand-600 shadow-sm dark:bg-gray-900 dark:text-white"
+                        : "text-gray-600 hover:bg-white/70 dark:text-gray-300"
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          <form onSubmit={buscar} className="mt-6 grid grid-cols-1 gap-3 xl:grid-cols-4">
+          <form
+            onSubmit={buscar}
+            className="mt-6 grid grid-cols-1 gap-3 xl:grid-cols-4"
+          >
             <input
               className="h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
               placeholder="Buscar por empleado o motivo"
@@ -275,7 +325,7 @@ export default function PermissionRequestsPage() {
               value={requestKind}
               onChange={(e) => setRequestKind(e.target.value)}
             >
-              <option value="">Todos los tipos de solicitud</option>
+              <option value="">Todos los tipos</option>
               <option value="entrada">Entrada</option>
               <option value="salida">Salida</option>
               <option value="inasistencia">Inasistencia</option>
@@ -331,7 +381,11 @@ export default function PermissionRequestsPage() {
                 <button type="submit" className={claseBotonSecundario}>
                   Buscar
                 </button>
-                <button type="button" onClick={limpiar} className={claseBotonSecundario}>
+                <button
+                  type="button"
+                  onClick={limpiar}
+                  className={claseBotonSecundario}
+                >
                   Limpiar
                 </button>
               </div>
@@ -342,7 +396,11 @@ export default function PermissionRequestsPage() {
                 <button type="submit" className={claseBotonSecundario}>
                   Buscar
                 </button>
-                <button type="button" onClick={limpiar} className={claseBotonSecundario}>
+                <button
+                  type="button"
+                  onClick={limpiar}
+                  className={claseBotonSecundario}
+                >
                   Limpiar
                 </button>
               </div>
@@ -355,11 +413,26 @@ export default function PermissionRequestsPage() {
             solicitudes={solicitudes}
             cargando={cargando}
             mostrarEmpleado
-            onAprobar={onAprobarTabla}
-            onRechazar={onRechazarTabla}
-            onCancelar={(solicitud) => {
-              if (puedeCancelarSolicitud(solicitud)) {
-                cancelar(solicitud);
+            onAprobar={
+              puedeAutorizar
+                ? async (solicitud) => {
+                    await aprobar(solicitud);
+                  }
+                : undefined
+            }
+            onRechazar={
+              puedeAutorizar
+                ? (solicitud) => {
+                    abrirRechazo(solicitud);
+                  }
+                : undefined
+            }
+            onCancelar={async (solicitud) => {
+              if (
+                solicitud.status === "pendiente" &&
+                (solicitud.user_id === usuarioActual?.id || puedeVerTodos)
+              ) {
+                await cancelar(solicitud);
               }
             }}
           />
@@ -370,33 +443,17 @@ export default function PermissionRequestsPage() {
             </p>
 
             <div className="flex flex-wrap items-center gap-3">
-              <select
-                value={porPagina}
-                onChange={async (e) => {
-                  const nuevoLimite = Number(e.target.value);
-                  setPorPagina(nuevoLimite);
-                  await cargarSolicitudes(1, nuevoLimite);
-                }}
-                className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-              >
-                {[10, 15, 20, 50].map((item) => (
-                  <option key={item} value={item}>
-                    {item} por página
-                  </option>
-                ))}
-              </select>
-
               <button
                 type="button"
                 onClick={() => cargarSolicitudes(paginaActual - 1, porPagina)}
                 disabled={paginaActual <= 1}
                 className={claseBotonSecundario}
               >
-                Anterior
+                &lt;
               </button>
 
               <span className="text-sm">
-                Página {paginaActual} de {ultimaPagina}
+                {paginaActual} de {ultimaPagina}
               </span>
 
               <button
@@ -405,7 +462,7 @@ export default function PermissionRequestsPage() {
                 disabled={paginaActual >= ultimaPagina}
                 className={claseBotonSecundario}
               >
-                Siguiente
+                &gt;
               </button>
             </div>
           </div>
@@ -417,6 +474,7 @@ export default function PermissionRequestsPage() {
         onClose={() => setModalNuevoAbierto(false)}
         onGuardado={async () => {
           await cargarSolicitudes(1, porPagina);
+          await cargarResumen();
         }}
         permitirCapturarParaOtros={puedeCapturarParaOtros}
         usuarios={usuarios}
@@ -430,6 +488,7 @@ export default function PermissionRequestsPage() {
         }}
         onGuardado={async () => {
           await cargarSolicitudes(paginaActual, porPagina);
+          await cargarResumen();
         }}
         solicitud={solicitudSeleccionada}
       />
