@@ -1,3 +1,10 @@
+/**
+ * Componente AppSidebar
+ *
+ * Este componente renderiza la navegación principal de la barra lateral de la aplicación.
+ * Filtra los elementos de navegación basados en el rol del usuario y maneja la expansión/colapso de submenús.
+ * La barra lateral adapta su ancho y visibilidad basados en el estado de expansión y el tamaño de pantalla.
+ */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
 import { ChevronDownIcon, HorizontaLDots } from "../icons";
@@ -6,10 +13,12 @@ import { filtrarMenuPorRol, navItems, type NavItem } from "../data/navigation";
 import { useAuthStore } from "../store/useAuthStore";
 
 const AppSidebar: React.FC = () => {
+  // Obtener rol del usuario del store de auth y contexto de sidebar para gestión de estado UI
   const rol = useAuthStore((state) => state.rol);
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
 
+  // Filtrar elementos de navegación basados en el rol del usuario para mostrar solo opciones accesibles
   const items = useMemo(() => {
     return filtrarMenuPorRol(navItems, (rol ?? "rh") as any);
   }, [rol]);
@@ -25,7 +34,7 @@ const AppSidebar: React.FC = () => {
     [location.pathname],
   );
 
-  // Solo sincroniza el submenu cuando cambia la ruta
+  // Sincronizar submenu abierto con la ruta actual cuando cambia la ubicación
   useEffect(() => {
     let matched = false;
 
@@ -63,6 +72,7 @@ const AppSidebar: React.FC = () => {
     setOpenSubmenu((prev) => (prev === index ? null : index));
   };
 
+  // Función para renderizar elementos del menú con soporte para submenús y enlaces directos
   const renderMenuItems = (menuItems: NavItem[]) => (
     <ul className="flex flex-col gap-4">
       {menuItems.map((nav, index) => (
@@ -164,6 +174,7 @@ const AppSidebar: React.FC = () => {
     </ul>
   );
 
+  // Renderizar la barra lateral con ancho dinámico basado en el estado de expansión
   return (
     <aside
       className={`fixed mt-16 flex h-screen flex-col border-r border-gray-200 bg-white px-5 transition-all duration-300 ease-in-out dark:border-gray-800 dark:bg-black lg:mt-0 ${

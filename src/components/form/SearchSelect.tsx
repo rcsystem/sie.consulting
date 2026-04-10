@@ -117,7 +117,7 @@ export default function SearchSelect({
           setTermino("");
           actualizarPosicion();
         }}
-        className="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-4 py-3 text-left text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+        className="flex w-full items-center justify-between rounded-sm border border-gray-300 bg-white px-4 py-3 text-left text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
         aria-haspopup="listbox"
         aria-expanded={abierto}
       >
@@ -131,7 +131,7 @@ export default function SearchSelect({
         ? createPortal(
             <div
               ref={panelRef}
-              className="fixed z-[1000000] overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900"
+              className="fixed z-[1000000] overflow-hidden rounded-sm border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-900"
               style={{
                 top: rect.bottom + 4,
                 left: rect.left,

@@ -1,14 +1,22 @@
+/**
+ * Componente AuthorizePermissionRequestsPage
+ *
+ * Página para usuarios autorizados (gerentes, directores, RH, admins) para revisar y gestionar solicitudes de permisos.
+ * Proporciona capacidades de filtrado, aprobación, rechazo, cancelación y visualización de PDF.
+ */
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import PageMeta from "../../components/common/PageMeta";
 import api from "../../lib/api";
 import PermissionRequestsTable from "../../components/PermissionRequests/PermissionRequestsTable";
 import RejectPermissionRequestModal from "../../components/PermissionRequests/RejectPermissionRequestModal";
+import PermissionRequestPdfModal from "../../components/PermissionRequests/PermissionRequestPdfModal";
 import type {
   RespuestaPaginadaSolicitudesPermiso,
   SolicitudPermiso,
 } from "../../types/permissionRequests";
 
+// Pestañas de estado para filtrar solicitudes
 const tabsEstatus = [
   { value: "", label: "Todos" },
   { value: "pendiente", label: "Pendientes" },
@@ -18,9 +26,11 @@ const tabsEstatus = [
 ];
 
 export default function AuthorizePermissionRequestsPage() {
+  // Estado para datos de solicitudes de permisos y UI
   const [solicitudes, setSolicitudes] = useState<SolicitudPermiso[]>([]);
   const [cargando, setCargando] = useState(false);
 
+  // Estados de filtro para búsqueda y filtrado de solicitudes
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [employeeType, setEmployeeType] = useState("");
@@ -28,6 +38,7 @@ export default function AuthorizePermissionRequestsPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
+  // Estados de paginación
   const [paginaActual, setPaginaActual] = useState(1);
   const [porPagina, setPorPagina] = useState(10);
   const [ultimaPagina, setUltimaPagina] = useState(1);
@@ -35,16 +46,30 @@ export default function AuthorizePermissionRequestsPage() {
   const [desde, setDesde] = useState<number | null>(null);
   const [hasta, setHasta] = useState<number | null>(null);
 
+  // Estados de modal para visualización de PDF y rechazo
+  const [modalPdfAbierto, setModalPdfAbierto] = useState(false);
+  const [solicitudPdf, setSolicitudPdf] = useState<SolicitudPermiso | null>(
+    null,
+  );
+
   const [modalRechazoAbierto, setModalRechazoAbierto] = useState(false);
   const [solicitudSeleccionada, setSolicitudSeleccionada] =
     useState<SolicitudPermiso | null>(null);
 
+  // Clases CSS para botones
   const claseBotonPrimario =
-    "inline-flex h-10 items-center justify-center rounded-lg bg-brand-500 px-4 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-60";
+    "inline-flex h-10 items-center justify-center rounded-sm bg-brand-500 px-4 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-60";
 
   const claseBotonSecundario =
-    "inline-flex h-10 items-center justify-center rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800";
+    "inline-flex h-10 items-center justify-center rounded-sm border border-gray-300 px-4 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800";
 
+  // Abrir modal de PDF para una solicitud específica
+  const abrirPermiso = (solicitud: SolicitudPermiso) => {
+    setSolicitudPdf(solicitud);
+    setModalPdfAbierto(true);
+  };
+
+  // Cargar solicitudes de permisos con filtros y paginación
   const cargarSolicitudes = async (
     pagina = paginaActual,
     limite = porPagina,
@@ -76,6 +101,7 @@ export default function AuthorizePermissionRequestsPage() {
         date_to: dateToFinal || undefined,
         page: pagina,
         per_page: limite,
+        is_active: true,
       };
 
       const { data } = await api.get<RespuestaPaginadaSolicitudesPermiso>(
@@ -134,46 +160,47 @@ export default function AuthorizePermissionRequestsPage() {
     });
   };
 
- const aprobar = async (solicitud: SolicitudPermiso) => {
-  const resultado = await Swal.fire({
-    title: "¿Aprobar solicitud?",
-    text: "La solicitud quedará autorizada.",
-    icon: "question",
-    showCancelButton: true,
-    confirmButtonText: "Sí, aprobar",
-    cancelButtonText: "Cancelar",
-    reverseButtons: true,
-    focusCancel: true,
-    confirmButtonColor: "#16a34a",
-    cancelButtonColor: "#bcbfc5",
-  });
-
-  if (!resultado.isConfirmed) return;
-
-  try {
-    await api.patch(`/permission-requests/${solicitud.id}/approve`);
-
-    await Swal.fire({
-      title: "Solicitud aprobada",
-      text: "La solicitud fue aprobada correctamente.",
-      icon: "success",
-      confirmButtonText: "Aceptar",
+  // Aprobar una solicitud de permiso con diálogo de confirmación
+  const aprobar = async (solicitud: SolicitudPermiso) => {
+    const resultado = await Swal.fire({
+      title: "¿Aprobar solicitud?",
+      text: "La solicitud quedará autorizada.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Sí, aprobar",
+      cancelButtonText: "Cancelar",
+      reverseButtons: true,
+      focusCancel: true,
       confirmButtonColor: "#16a34a",
+      cancelButtonColor: "#bcbfc5",
     });
 
-    await cargarSolicitudes(paginaActual, porPagina);
-  } catch (error) {
-    console.error(error);
+    if (!resultado.isConfirmed) return;
 
-    await Swal.fire({
-      title: "No fue posible aprobar",
-      text: "Ocurrió un error al aprobar la solicitud.",
-      icon: "error",
-      confirmButtonText: "Cerrar",
-      confirmButtonColor: "#dc2626",
-    });
-  }
-};
+    try {
+      await api.patch(`/permission-requests/${solicitud.id}/approve`);
+
+      await Swal.fire({
+        title: "Solicitud aprobada",
+        text: "La solicitud fue aprobada correctamente.",
+        icon: "success",
+        confirmButtonText: "Aceptar",
+        confirmButtonColor: "#16a34a",
+      });
+
+      await cargarSolicitudes(paginaActual, porPagina);
+    } catch (error) {
+      console.error(error);
+
+      await Swal.fire({
+        title: "No fue posible aprobar",
+        text: "Ocurrió un error al aprobar la solicitud.",
+        icon: "error",
+        confirmButtonText: "Cerrar",
+        confirmButtonColor: "#dc2626",
+      });
+    }
+  };
 
   const abrirRechazo = (solicitud: SolicitudPermiso) => {
     setSolicitudSeleccionada(solicitud);
@@ -192,46 +219,48 @@ export default function AuthorizePermissionRequestsPage() {
     await cargarSolicitudes(paginaActual, porPagina);
   };
 
-const cancelar = async (solicitud: SolicitudPermiso) => {
-  const resultado = await Swal.fire({
-    title: "¿Cancelar solicitud?",
-    text: "La solicitud cambiará a estatus cancelado.",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonText: "Sí, cancelar",
-    cancelButtonText: "Volver",
-    reverseButtons: true,
-    focusCancel: true,
-    confirmButtonColor: "#d90606",
-    cancelButtonColor: "#d6dbe4",
-  });
-
-  if (!resultado.isConfirmed) return;
-
-  try {
-    await api.patch(`/permission-requests/${solicitud.id}/cancel`);
-
-    await Swal.fire({
-      title: "Solicitud cancelada",
-      text: "La solicitud fue cancelada correctamente.",
-      icon: "success",
-      confirmButtonText: "Aceptar",
-      confirmButtonColor: "#16a34a",
+  const cancelar = async (solicitud: SolicitudPermiso) => {
+    const resultado = await Swal.fire({
+      title: "¿Cancelar solicitud?",
+      text: "La solicitud será ocultada y no se mostrará más en la lista.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, cancelar",
+      cancelButtonText: "Volver",
+      reverseButtons: true,
+      focusCancel: true,
+      confirmButtonColor: "#d90606",
+      cancelButtonColor: "#d6dbe4",
     });
 
-    await cargarSolicitudes(paginaActual, porPagina);
-  } catch (error) {
-    console.error(error);
+    if (!resultado.isConfirmed) return;
 
-    await Swal.fire({
-      title: "No fue posible cancelar",
-      text: "Ocurrió un error al cancelar la solicitud.",
-      icon: "error",
-      confirmButtonText: "Cerrar",
-      confirmButtonColor: "#dc2626",
-    });
-  }
-};
+    try {
+      await api.patch(`/permission-requests/${solicitud.id}`, {
+        is_active: false
+      });
+
+      await Swal.fire({
+        title: "Solicitud cancelada",
+        text: "La solicitud fue cancelada correctamente.",
+        icon: "success",
+        confirmButtonText: "Aceptar",
+        confirmButtonColor: "#16a34a",
+      });
+
+      await cargarSolicitudes(paginaActual, porPagina);
+    } catch (error) {
+      console.error(error);
+
+      await Swal.fire({
+        title: "No fue posible cancelar",
+        text: "Ocurrió un error al cancelar la solicitud.",
+        icon: "error",
+        confirmButtonText: "Cerrar",
+        confirmButtonColor: "#dc2626",
+      });
+    }
+  };
 
   const eliminar = async (solicitud: SolicitudPermiso) => {
     const confirmado = window.confirm(
@@ -274,9 +303,11 @@ const cancelar = async (solicitud: SolicitudPermiso) => {
                   onClick={async () => {
                     const nuevoStatus = tab.value;
                     setStatus(nuevoStatus);
-                    await cargarSolicitudes(1, porPagina, { status: nuevoStatus });
+                    await cargarSolicitudes(1, porPagina, {
+                      status: nuevoStatus,
+                    });
                   }}
-                  className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+                  className={`rounded-sm px-4 py-2 text-sm font-medium transition ${
                     activo
                       ? "bg-white text-brand-600 shadow-sm dark:bg-gray-900 dark:text-white"
                       : "text-gray-600 hover:bg-white/70 dark:text-gray-300"
@@ -361,7 +392,7 @@ const cancelar = async (solicitud: SolicitudPermiso) => {
               onAprobar={aprobar}
               onRechazar={abrirRechazo}
               onCancelar={cancelar}
-              onEliminar={eliminar}
+              onVerPermiso={abrirPermiso}
             />
           </div>
 
@@ -378,7 +409,7 @@ const cancelar = async (solicitud: SolicitudPermiso) => {
                   setPorPagina(nuevoLimite);
                   await cargarSolicitudes(1, nuevoLimite);
                 }}
-                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                className="rounded-sm border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
               >
                 {[10, 15, 20, 50].map((opcion) => (
                   <option key={opcion} value={opcion}>
@@ -418,6 +449,14 @@ const cancelar = async (solicitud: SolicitudPermiso) => {
           </div>
         </div>
       </div>
+      <PermissionRequestPdfModal
+        abierto={modalPdfAbierto}
+        solicitud={solicitudPdf}
+        onClose={() => {
+          setModalPdfAbierto(false);
+          setSolicitudPdf(null);
+        }}
+      />
 
       <RejectPermissionRequestModal
         abierto={modalRechazoAbierto}

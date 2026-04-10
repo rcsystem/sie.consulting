@@ -1,3 +1,10 @@
+/**
+ * Componente RejectPermissionRequestModal
+ *
+ * Modal para rechazar solicitudes de permisos con un motivo requerido.
+ * Muestra detalles de la solicitud original y proporciona un textarea para el motivo de rechazo.
+ * Envía rechazo vía API y maneja estados de éxito/error.
+ */
 import { useEffect, useState } from "react";
 import api from "../../lib/api";
 import type {
@@ -11,8 +18,6 @@ type Props = {
   onGuardado: () => Promise<void> | void;
   solicitud: SolicitudPermiso | null;
 };
-
-
 
 export default function RejectPermissionRequestModal({
   abierto,
@@ -30,11 +35,11 @@ export default function RejectPermissionRequestModal({
     if (abierto) {
       setRenderizar(true);
 
-      const frame = requestAnimationFrame(() => {
+      const temporizador = setTimeout(() => {
         setVisible(true);
-      });
+      }, 50);
 
-      return () => cancelAnimationFrame(frame);
+      return () => clearTimeout(temporizador);
     }
 
     setVisible(false);
@@ -148,7 +153,7 @@ export default function RejectPermissionRequestModal({
                 rows={6}
                 value={motivo}
                 onChange={(e) => setMotivo(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-red-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                className="w-full rounded-sm border border-gray-300 px-4 py-3 text-sm outline-none focus:border-red-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                 placeholder="Describe el motivo del rechazo"
               />
             </div>
@@ -158,7 +163,7 @@ export default function RejectPermissionRequestModal({
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+              className="inline-flex h-11 items-center justify-center rounded-sm border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
             >
               Cancelar
             </button>
@@ -166,7 +171,7 @@ export default function RejectPermissionRequestModal({
             <button
               type="submit"
               disabled={guardando}
-              className="inline-flex h-11 items-center justify-center rounded-lg bg-red-500 px-4 text-sm font-semibold text-white transition hover:bg-red-600 disabled:opacity-60"
+              className="inline-flex h-11 items-center justify-center rounded-sm bg-red-500 px-4 text-sm font-semibold text-white transition hover:bg-red-600 disabled:opacity-60"
             >
               {guardando ? "Procesando..." : "Rechazar"}
             </button>

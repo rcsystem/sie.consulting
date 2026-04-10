@@ -356,7 +356,7 @@ export default function UserFormModal({
                   key={paso.id}
                   type="button"
                   onClick={() => setPasoActual(paso.id)}
-                  className={`flex items-center gap-3 rounded-lg border px-4 py-3 text-left transition ${
+                  className={`flex items-center gap-3 rounded-sm border px-4 py-3 text-left transition ${
                     activo
                       ? "border-brand-500 bg-brand-500 text-white"
                       : completado

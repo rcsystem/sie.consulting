@@ -187,7 +187,7 @@ export default function PositionFormModal({
                   type="text"
                   value={formulario.name}
                   onChange={(e) => actualizarCampo("name", e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  className="w-full rounded-sm border border-gray-300 px-4 py-3 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                   placeholder="Ej. Analista de RH"
                 />
               </div>
@@ -200,7 +200,7 @@ export default function PositionFormModal({
                   type="text"
                   value={formulario.code}
                   onChange={(e) => actualizarCampo("code", e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  className="w-full rounded-sm border border-gray-300 px-4 py-3 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                   placeholder="Ej. ARH"
                 />
               </div>
@@ -212,7 +212,7 @@ export default function PositionFormModal({
                 <select
                   value={formulario.department_id}
                   onChange={(e) => actualizarCampo("department_id", e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  className="w-full rounded-sm border border-gray-300 px-4 py-3 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                 >
                   <option value="">Selecciona un departamento</option>
                   {departamentos.map((item) => (
@@ -233,7 +233,7 @@ export default function PositionFormModal({
                   step="0.01"
                   value={formulario.base_salary}
                   onChange={(e) => actualizarCampo("base_salary", e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  className="w-full rounded-sm border border-gray-300 px-4 py-3 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                   placeholder="Ej. 18000"
                 />
               </div>
@@ -246,7 +246,7 @@ export default function PositionFormModal({
                   rows={4}
                   value={formulario.description}
                   onChange={(e) => actualizarCampo("description", e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  className="w-full rounded-sm border border-gray-300 px-4 py-3 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                   placeholder="Descripción opcional del puesto"
                 />
               </div>
@@ -273,7 +273,7 @@ export default function PositionFormModal({
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+              className="inline-flex h-11 items-center justify-center rounded-sm border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
             >
               Cancelar
             </button>
@@ -281,7 +281,7 @@ export default function PositionFormModal({
             <button
               type="submit"
               disabled={guardando}
-              className="inline-flex h-11 items-center justify-center rounded-lg bg-brand-500 px-4 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-60"
+              className="inline-flex h-11 items-center justify-center rounded-sm bg-brand-500 px-4 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-60"
             >
               {guardando
                 ? "Guardando..."

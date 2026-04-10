@@ -80,7 +80,7 @@ export default function UserDropdown() {
               onItemClick={closeDropdown}
               tag="a"
               to="/mi-perfil"
-              className="group flex items-center gap-3 rounded-lg px-3 py-2 font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+              className="group flex items-center gap-3 rounded-sm px-3 py-2 font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
             >
               Mi perfil
             </DropdownItem>
@@ -91,7 +91,7 @@ export default function UserDropdown() {
               onItemClick={closeDropdown}
               tag="a"
               to="/cambiar-contrasena"
-              className="group flex items-center gap-3 rounded-lg px-3 py-2 font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+              className="group flex items-center gap-3 rounded-sm px-3 py-2 font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
             >
               Cambiar contraseña
             </DropdownItem>
@@ -105,7 +105,7 @@ export default function UserDropdown() {
             closeDropdown();
             await cerrarSesion();
           }}
-          className="group mt-3 flex items-center gap-3 rounded-lg px-3 py-2 font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+          className="group mt-3 flex items-center gap-3 rounded-sm px-3 py-2 font-medium text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
         >
           Cerrar sesión
         </Link>

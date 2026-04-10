@@ -10,7 +10,7 @@ const AspectRatioVideo: React.FC<AspectRatioVideoProps> = ({
   title = "Embedded Video",
 }) => {
   return (
-    <div className={`aspect-${aspectRatio} overflow-hidden rounded-lg`}>
+    <div className={`aspect-${aspectRatio} overflow-hidden rounded-sm`}>
       <iframe
         src={videoUrl}
         title={title}

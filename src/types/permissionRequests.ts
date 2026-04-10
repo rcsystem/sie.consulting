@@ -19,6 +19,7 @@ export type SolicitudPermiso = {
   reason: string;
 
   status: "pendiente" | "aprobado" | "rechazado" | "cancelado";
+  is_active: boolean;
   approved_by_role: string | null;
   approved_at: string | null;
   rejection_reason: string | null;

@@ -190,7 +190,7 @@ export default function DepartmentFormModal({
                   type="text"
                   value={formulario.name}
                   onChange={(e) => actualizarCampo("name", e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  className="w-full rounded-sm border border-gray-300 px-4 py-3 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                   placeholder="Ej. Recursos Humanos"
                 />
               </div>
@@ -203,7 +203,7 @@ export default function DepartmentFormModal({
                   type="text"
                   value={formulario.code}
                   onChange={(e) => actualizarCampo("code", e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  className="w-full rounded-sm border border-gray-300 px-4 py-3 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                   placeholder="Ej. RH"
                 />
               </div>
@@ -215,7 +215,7 @@ export default function DepartmentFormModal({
                 <select
                   value={formulario.parent_id}
                   onChange={(e) => actualizarCampo("parent_id", e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  className="w-full rounded-sm border border-gray-300 px-4 py-3 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                 >
                   <option value="">Sin departamento padre</option>
                   {opcionesPadre.map((item) => (
@@ -234,7 +234,7 @@ export default function DepartmentFormModal({
                   rows={4}
                   value={formulario.description}
                   onChange={(e) => actualizarCampo("description", e.target.value)}
-                  className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                  className="w-full rounded-sm border border-gray-300 px-4 py-3 text-sm outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
                   placeholder="Descripción opcional del departamento"
                 />
               </div>
@@ -261,7 +261,7 @@ export default function DepartmentFormModal({
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+              className="inline-flex h-11 items-center justify-center rounded-sm border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
             >
               Cancelar
             </button>
@@ -269,7 +269,7 @@ export default function DepartmentFormModal({
             <button
               type="submit"
               disabled={guardando}
-              className="inline-flex h-11 items-center justify-center rounded-lg bg-brand-500 px-4 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-60"
+              className="inline-flex h-11 items-center justify-center rounded-sm bg-brand-500 px-4 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-60"
             >
               {guardando
                 ? "Guardando..."

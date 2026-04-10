@@ -1,6 +1,6 @@
 export default function OneIsToOne() {
   return (
-    <div className="overflow-hidden rounded-lg aspect-square">
+    <div className="overflow-hidden rounded-sm aspect-square">
       <iframe
         src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         title="YouTube video"

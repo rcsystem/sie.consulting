@@ -1,3 +1,10 @@
+/**
+ * Componente PermissionRequestsPage
+ *
+ * Página principal para gestionar todas las solicitudes de permisos en el sistema.
+ * Proporciona filtrado, búsqueda y acciones basadas en roles como aprobar, rechazar o cancelar solicitudes.
+ * Accesible para usuarios RH, admin, super_admin con permisos variables.
+ */
 import { useEffect, useState } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import api from "../../lib/api";
@@ -10,6 +17,7 @@ import type {
   SolicitudPermiso,
 } from "../../types/permissionRequests";
 
+// Tipo para datos del usuario actual
 type UsuarioActual = {
   id: number;
   role?: string | null;
@@ -17,6 +25,7 @@ type UsuarioActual = {
   email?: string | null;
 };
 
+// Tipo para resumen de solicitudes de permisos
 type ResumenPermisos = {
   pendientes: number;
   aprobados_mes: number;
@@ -24,6 +33,7 @@ type ResumenPermisos = {
   cuatro_permisos_mes: number;
 };
 
+// Pestañas de estado para filtrar solicitudes
 const tabsEstatus = [
   { value: "", label: "Todos" },
   { value: "pendiente", label: "Pendientes" },
@@ -34,6 +44,7 @@ const tabsEstatus = [
 ];
 
 export default function PermissionRequestsPage() {
+  // Estado para datos de solicitudes de permisos y UI
   const [solicitudes, setSolicitudes] = useState<SolicitudPermiso[]>([]);
   const [usuarios, setUsuarios] = useState<UsuarioSistema[]>([]);
   const [usuarioActual, setUsuarioActual] = useState<UsuarioActual | null>(
@@ -42,6 +53,7 @@ export default function PermissionRequestsPage() {
   const [resumen, setResumen] = useState<ResumenPermisos | null>(null);
   const [cargando, setCargando] = useState(false);
 
+  // Estados de filtro para búsqueda y filtrado de solicitudes
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [employeeType, setEmployeeType] = useState("");
@@ -50,6 +62,7 @@ export default function PermissionRequestsPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
+  // Estados de paginación
   const [paginaActual, setPaginaActual] = useState(1);
   const [porPagina, setPorPagina] = useState(10);
   const [ultimaPagina, setUltimaPagina] = useState(1);
@@ -57,17 +70,19 @@ export default function PermissionRequestsPage() {
   const [desde, setDesde] = useState<number | null>(null);
   const [hasta, setHasta] = useState<number | null>(null);
 
+  // Estados de modal para crear y rechazar solicitudes
   const [modalNuevoAbierto, setModalNuevoAbierto] = useState(false);
   const [modalRechazoAbierto, setModalRechazoAbierto] = useState(false);
-  const [solicitudSeleccionada, setSolicitudSeleccionada] =
-    useState<SolicitudPermiso | null>(null);
+  const [solicitudSeleccionada, setSolicitudSeleccionada] = useState<SolicitudPermiso | null>(null);
 
+  // Clases CSS para botones
   const claseBotonSecundario =
-    "inline-flex h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white";
+    "inline-flex h-11 items-center justify-center rounded-sm border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white";
 
   const claseBotonPrimario =
     "inline-flex h-11 items-center justify-center rounded-sm bg-brand-500 px-2 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-60";
 
+  // Banderas de permisos basadas en el rol del usuario
   const puedeVerTodos =
     usuarioActual?.role === "rh" ||
     usuarioActual?.role === "admin" ||
@@ -80,6 +95,7 @@ export default function PermissionRequestsPage() {
 
   const puedeCapturarParaOtros = puedeVerTodos;
 
+  // Cargar estadísticas de resumen para solicitudes de permisos
   const cargarResumen = async () => {
     try {
       const { data } = await api.get("/permission-requests/summary");
@@ -89,6 +105,7 @@ export default function PermissionRequestsPage() {
     }
   };
 
+  // Cargar datos del usuario autenticado actual
   const cargarUsuarioActual = async () => {
     try {
       const response = await api.get("/auth/me");
@@ -105,6 +122,7 @@ export default function PermissionRequestsPage() {
     }
   };
 
+  // Cargar lista de usuarios para selección (solo si el usuario tiene permiso para ver todos)
   const cargarUsuarios = async () => {
     if (!puedeVerTodos) return;
 
@@ -121,6 +139,7 @@ export default function PermissionRequestsPage() {
     }
   };
 
+  // Cargar solicitudes de permisos con filtros opcionales y paginación
   const cargarSolicitudes = async (
     pagina = paginaActual,
     limite = porPagina,
@@ -154,6 +173,7 @@ export default function PermissionRequestsPage() {
         date_to: dateToFinal || undefined,
         page: pagina,
         per_page: limite,
+        is_active: true,
       };
 
       if (statusFinal === "mis_permisos") {
@@ -221,14 +241,18 @@ export default function PermissionRequestsPage() {
     await cargarResumen();
   };
 
+  // Aprobar una solicitud de permiso
   const aprobar = async (solicitud: SolicitudPermiso) => {
     await api.patch(`/permission-requests/${solicitud.id}/approve`, {});
     await cargarSolicitudes(paginaActual, porPagina);
     await cargarResumen();
   };
 
+  // Cancelar una solicitud de permiso
   const cancelar = async (solicitud: SolicitudPermiso) => {
-    await api.patch(`/permission-requests/${solicitud.id}/cancel`);
+    await api.patch(`/permission-requests/${solicitud.id}`, {
+      is_active: false
+    });
     await cargarSolicitudes(paginaActual, porPagina);
     await cargarResumen();
   };
@@ -286,7 +310,7 @@ export default function PermissionRequestsPage() {
                         status: nuevoStatus,
                       });
                     }}
-                    className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
+                    className={`rounded-sm px-4 py-2 text-sm font-medium transition ${
                       activo
                         ? "bg-white text-brand-600 shadow-sm dark:bg-gray-900 dark:text-white"
                         : "text-gray-600 hover:bg-white/70 dark:text-gray-300"
@@ -304,14 +328,14 @@ export default function PermissionRequestsPage() {
             className="mt-6 grid grid-cols-1 gap-3 xl:grid-cols-4"
           >
             <input
-              className="h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+              className="h-11 rounded-sm border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
               placeholder="Buscar por empleado o motivo"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
 
             <select
-              className="h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+              className="h-11 rounded-sm border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
               value={employeeType}
               onChange={(e) => setEmployeeType(e.target.value)}
             >
@@ -321,7 +345,7 @@ export default function PermissionRequestsPage() {
             </select>
 
             <select
-              className="h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+              className="h-11 rounded-sm border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
               value={requestKind}
               onChange={(e) => setRequestKind(e.target.value)}
             >
@@ -333,7 +357,7 @@ export default function PermissionRequestsPage() {
 
             {puedeVerTodos ? (
               <select
-                className="h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                className="h-11 rounded-sm border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                 value={userId}
                 onChange={(e) => setUserId(e.target.value)}
               >
@@ -347,7 +371,7 @@ export default function PermissionRequestsPage() {
             ) : (
               <input
                 type="date"
-                className="h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                className="h-11 rounded-sm border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                 value={dateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
               />
@@ -356,14 +380,14 @@ export default function PermissionRequestsPage() {
             {puedeVerTodos ? (
               <input
                 type="date"
-                className="h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                className="h-11 rounded-sm border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                 value={dateFrom}
                 onChange={(e) => setDateFrom(e.target.value)}
               />
             ) : (
               <input
                 type="date"
-                className="h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                className="h-11 rounded-sm border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
               />
@@ -372,7 +396,7 @@ export default function PermissionRequestsPage() {
             {puedeVerTodos ? (
               <input
                 type="date"
-                className="h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                className="h-11 rounded-sm border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
                 value={dateTo}
                 onChange={(e) => setDateTo(e.target.value)}
               />

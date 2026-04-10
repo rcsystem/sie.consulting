@@ -38,16 +38,18 @@ export function traducirEstatusSolicitud(valor?: string | null) {
 }
 
 export function claseBadgeEstatusSolicitud(valor?: string | null) {
+  const baseClasses = "rounded-full px-3 py-1 text-xs font-medium";
+
   switch (valor) {
     case "aprobado":
-      return "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300";
+      return `${baseClasses} bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300`;
     case "rechazado":
-      return "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300";
+      return `${baseClasses} bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300`;
     case "cancelado":
-      return "bg-gray-200 text-gray-700 dark:bg-gray-500/15 dark:text-gray-300";
+      return `${baseClasses} bg-gray-200 text-gray-700 dark:bg-gray-500/15 dark:text-gray-300`;
     case "pendiente":
     default:
-      return "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-300";
+      return `${baseClasses} bg-yellow-100 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-300`;
   }
 }
 

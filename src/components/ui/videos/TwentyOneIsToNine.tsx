@@ -1,6 +1,6 @@
 export default function TwentyOneIsToNine() {
   return (
-    <div className="aspect-21/9 overflow-hidden rounded-lg">
+    <div className="aspect-21/9 overflow-hidden rounded-sm">
       <iframe
         src="https://www.youtube.com/embed/dQw4w9WgXcQ"
         title="YouTube video"

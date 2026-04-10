@@ -1,3 +1,11 @@
+/**
+ * Componente PermissionRequestFormModal
+ *
+ * Modal de formulario para crear nuevas solicitudes de permisos.
+ * Soporta diferentes tipos de solicitud (entrada, salida, inasistencia) con campos condicionales.
+ * Permite seleccionar usuario si está autorizado, rangos de fecha/hora y motivo.
+ * Usa DayPicker para rangos de fechas de inasistencia excluyendo fines de semana.
+ */
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { DayPicker, type DateRange } from "react-day-picker";
@@ -17,6 +25,7 @@ type Props = {
   onSubmit: (payload: SolicitudPermisoPayload) => Promise<void> | void;
 };
 
+// Tipo de estado del formulario
 type EstadoFormulario = {
   user_id: string;
   request_kind: "entrada" | "salida" | "inasistencia";
@@ -26,6 +35,7 @@ type EstadoFormulario = {
   reason: string;
 };
 
+// Estado inicial del formulario
 const estadoInicial: EstadoFormulario = {
   user_id: "",
   request_kind: "entrada",
@@ -57,11 +67,11 @@ export default function PermissionRequestFormModal({
       setRenderizar(true);
       setError(null);
 
-      const frame = requestAnimationFrame(() => {
+      const temporizador = window.setTimeout(() => {
         setVisible(true);
-      });
+      }, 50);
 
-      return () => cancelAnimationFrame(frame);
+      return () => window.clearTimeout(temporizador);
     }
 
     setVisible(false);
@@ -76,10 +86,12 @@ export default function PermissionRequestFormModal({
     return () => window.clearTimeout(temporizador);
   }, [abierto]);
 
+  // Título del modal
   const titulo = useMemo(() => "Nuevo permiso", []);
 
   if (!renderizar) return null;
 
+  // Actualizar campo del formulario
   const cambiarCampo = (campo: keyof EstadoFormulario, valor: string) => {
     setFormulario((prev) => ({
       ...prev,
@@ -87,10 +99,12 @@ export default function PermissionRequestFormModal({
     }));
   };
 
+  // Determinar campos requeridos basados en el tipo de solicitud
   const requiereHoraEntrada = formulario.request_kind === "entrada";
   const requiereHoraSalida = formulario.request_kind === "salida";
   const requiereRango = formulario.request_kind === "inasistencia";
 
+  // Calcular días hábiles para solicitudes de inasistencia
   const diasHabiles =
     rangoInasistencia?.from && rangoInasistencia?.to
       ? differenceInBusinessDays(rangoInasistencia.to, rangoInasistencia.from) +
@@ -99,6 +113,7 @@ export default function PermissionRequestFormModal({
         ? 1
         : 0;
 
+  // Manejar envío del formulario y construcción del payload
   const manejarSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
@@ -177,7 +192,7 @@ export default function PermissionRequestFormModal({
               type="button"
               onClick={onClose}
               disabled={deshabilitado}
-              className="rounded-lg border border-white/15 bg-white/10 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/15 disabled:opacity-60"
+              className="rounded-sm border border-white/15 bg-white/10 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/15 disabled:opacity-60"
             >
               Cerrar
             </button>
@@ -187,14 +202,14 @@ export default function PermissionRequestFormModal({
         <form onSubmit={manejarSubmit} className="flex min-h-0 flex-1 flex-col">
           <div className="flex-1 overflow-y-auto bg-slate-50 px-6 py-6 dark:bg-slate-950">
             {error ? (
-              <div className="mb-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
+              <div className="mb-5 rounded-sm border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-300">
                 {error}
               </div>
             ) : null}
 
             <div className="grid grid-cols-1 gap-6">
               {puedeVerTodos ? (
-                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                   <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                     Selección de usuario
                   </h3>
@@ -205,7 +220,7 @@ export default function PermissionRequestFormModal({
                   <select
                     value={formulario.user_id}
                     onChange={(e) => cambiarCampo("user_id", e.target.value)}
-                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                    className="w-full rounded-sm border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
                     required={puedeVerTodos}
                     disabled={deshabilitado}
                   >
@@ -219,7 +234,7 @@ export default function PermissionRequestFormModal({
                 </section>
               ) : null}
 
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Datos de la solicitud
                 </h3>
@@ -237,7 +252,7 @@ export default function PermissionRequestFormModal({
                           e.target.value as EstadoFormulario["request_kind"],
                         )
                       }
-                      className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                      className="w-full rounded-sm border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
                       disabled={deshabilitado}
                     >
                       <option value="entrada">Entrada</option>
@@ -255,7 +270,7 @@ export default function PermissionRequestFormModal({
                         type="date"
                         value={formulario.date}
                         onChange={(e) => cambiarCampo("date", e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                        className="w-full rounded-sm border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
                         required
                         disabled={deshabilitado}
                       />
@@ -273,7 +288,7 @@ export default function PermissionRequestFormModal({
                         onChange={(e) =>
                           cambiarCampo("entry_time", e.target.value)
                         }
-                        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                        className="w-full rounded-sm border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
                         required
                         disabled={deshabilitado}
                       />
@@ -291,7 +306,7 @@ export default function PermissionRequestFormModal({
                         onChange={(e) =>
                           cambiarCampo("exit_time", e.target.value)
                         }
-                        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                        className="w-full rounded-sm border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
                         required
                         disabled={deshabilitado}
                       />
@@ -301,7 +316,7 @@ export default function PermissionRequestFormModal({
               </section>
 
               {requiereRango ? (
-                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+                <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                   <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                     <div>
                       <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -313,13 +328,13 @@ export default function PermissionRequestFormModal({
                       </p>
                     </div>
 
-                    <div className="rounded-xl bg-brand-50 px-4 py-3 text-sm text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
+                    <div className="rounded-sm bg-brand-50 px-4 py-3 text-sm text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
                       <span className="font-semibold">Días hábiles:</span>{" "}
                       {diasHabiles}
                     </div>
                   </div>
 
-                  <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-950">
+                  <div className="overflow-x-auto rounded-sm border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
                     <DayPicker
                       mode="range"
                       selected={rangoInasistencia}
@@ -332,7 +347,7 @@ export default function PermissionRequestFormModal({
                   </div>
 
                   <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950">
+                    <div className="rounded-sm border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950">
                       <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         Inicio
                       </p>
@@ -343,7 +358,7 @@ export default function PermissionRequestFormModal({
                       </p>
                     </div>
 
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950">
+                    <div className="rounded-sm border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950">
                       <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         Fin
                       </p>
@@ -354,7 +369,7 @@ export default function PermissionRequestFormModal({
                       </p>
                     </div>
 
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950">
+                    <div className="rounded-sm border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-800 dark:bg-slate-950">
                       <p className="text-xs font-medium uppercase tracking-wide text-slate-500 dark:text-slate-400">
                         Conteo
                       </p>
@@ -366,7 +381,7 @@ export default function PermissionRequestFormModal({
                 </section>
               ) : null}
 
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+              <section className="rounded-sm border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
                 <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                   Justificación
                 </h3>
@@ -377,7 +392,7 @@ export default function PermissionRequestFormModal({
                 <textarea
                   value={formulario.reason}
                   onChange={(e) => cambiarCampo("reason", e.target.value)}
-                  className="min-h-[130px] w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                  className="min-h-[130px] w-full rounded-sm border border-slate-300 bg-white px-4 py-3 text-sm outline-none transition focus:border-brand-500 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
                   placeholder="Describe claramente el motivo de la solicitud"
                   required
                   disabled={deshabilitado}
@@ -390,7 +405,7 @@ export default function PermissionRequestFormModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+              className="rounded-sm border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
               disabled={deshabilitado}
             >
               Cancelar
@@ -398,7 +413,7 @@ export default function PermissionRequestFormModal({
 
             <button
               type="submit"
-              className="rounded-xl bg-brand-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-sm bg-brand-600 px-5 py-2 text-sm font-medium text-white transition hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-60"
               disabled={deshabilitado}
             >
               {deshabilitado ? "Guardando..." : "Guardar permiso"}

@@ -1,3 +1,14 @@
+/**
+ * Hoja de Estilos Global para Frontend SIE
+ *
+ * Este archivo contiene:
+ * - Importaciones y configuraciones de Tailwind CSS
+ * - Variables CSS personalizadas para colores, sombras y puntos de quiebre
+ * - Clases de utilidad para componentes (menús, botones, tablas, etc.)
+ * - Sobrescrituras de estilos de bibliotecas de terceros (ApexCharts, FullCalendar, Flatpickr, etc.)
+ * - Estilos de modo oscuro y puntos de quiebre responsivos
+ * - Estilos personalizados para calendario y formularios de solicitudes de permisos
+ */
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap")
 layer(base);
 
@@ -191,7 +202,7 @@ layer(base);
 }
 
 @utility menu-item {
-  @apply relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg text-theme-sm;
+  @apply relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-sm text-theme-sm;
 }
 
 @utility menu-item-active {
@@ -233,7 +244,7 @@ layer(base);
 }
 
 @utility menu-dropdown-item {
-  @apply relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-theme-sm font-medium;
+  @apply relative flex items-center gap-3 rounded-sm px-3 py-2.5 text-theme-sm font-medium;
 }
 
 @utility menu-dropdown-item-active {
@@ -312,7 +323,7 @@ layer(base);
 }
 
 .apexcharts-tooltip.apexcharts-theme-light {
-  @apply gap-1 !rounded-lg !border-gray-200 p-3 !shadow-theme-sm dark:!border-gray-800 dark:!bg-gray-900;
+  @apply gap-1 !rounded-sm !border-gray-200 p-3 !shadow-theme-sm dark:!border-gray-800 dark:!bg-gray-900;
 }
 
 .apexcharts-tooltip-marker {
@@ -579,7 +590,7 @@ span.flatpickr-weekday,
   @apply gap-2;
 }
 .fc-button-group .fc-button {
-  @apply flex h-10 w-10 items-center justify-center !rounded-lg border border-gray-200 bg-transparent hover:border-gray-200 hover:bg-gray-50 focus:shadow-none active:!border-gray-200 active:!bg-transparent active:!shadow-none dark:border-gray-800 dark:hover:border-gray-800 dark:hover:bg-gray-900 dark:active:border-gray-800!;
+  @apply flex h-10 w-10 items-center justify-center !rounded-sm border border-gray-200 bg-transparent hover:border-gray-200 hover:bg-gray-50 focus:shadow-none active:!border-gray-200 active:!bg-transparent active:!shadow-none dark:border-gray-800 dark:hover:border-gray-800 dark:hover:bg-gray-900 dark:active:border-gray-800!;
 }
 
 .fc-button-group .fc-button.fc-prev-button:before {
@@ -600,13 +611,13 @@ span.flatpickr-weekday,
   @apply hidden;
 }
 .fc-addEventButton-button {
-  @apply !rounded-lg !border-0 !bg-brand-500 !px-4 !py-2.5 !text-sm !font-medium hover:!bg-brand-600 focus:!shadow-none;
+  @apply !rounded-sm !border-0 !bg-brand-500 !px-4 !py-2.5 !text-sm !font-medium hover:!bg-brand-600 focus:!shadow-none;
 }
 .fc-toolbar-title {
   @apply !text-lg !font-medium text-gray-800 dark:text-white/90;
 }
 .fc-header-toolbar.fc-toolbar .fc-toolbar-chunk:last-child {
-  @apply rounded-lg bg-gray-100 p-0.5 dark:bg-gray-900;
+  @apply rounded-sm bg-gray-100 p-0.5 dark:bg-gray-900;
 }
 .fc-header-toolbar.fc-toolbar .fc-toolbar-chunk:last-child .fc-button {
   @apply !h-auto !w-auto rounded-md !border-0 bg-transparent !px-5 !py-2 text-sm font-medium text-gray-500 hover:text-gray-700 focus:!shadow-none dark:text-gray-400;
@@ -648,7 +659,7 @@ span.flatpickr-weekday,
   @apply text-gray-400 dark:text-white/30;
 }
 .event-fc-color {
-  @apply rounded-lg py-2.5 pl-4 pr-3;
+  @apply rounded-sm py-2.5 pl-4 pr-3;
 }
 .event-fc-color .fc-event-title {
   @apply p-0 text-sm font-normal text-gray-700;
@@ -803,4 +814,35 @@ input[type="date"] {
 input[type="date"]::-webkit-calendar-picker-indicator {
   opacity: 1;
   cursor: pointer;
+}
+
+/*css calendario permisos*/
+
+.dark .rdp-day {
+  color: #ffffff;
+}
+
+.dark .rdp-day_selected {
+  color: #ffffff;
+}
+
+.dark .rdp-button:hover {
+  background-color: #334155;
+  color: #ffffff;
+}
+
+.dark .rdp-nav_button {
+  color: #ffffff;
+}
+
+.dark .rdp-months {
+  color: #ffffff;
+}
+
+.dark .rdp-caption_label {
+  color: #ffffff;
+}
+
+.dark .rdp-head_cell {
+  color: #94a3b8;
 }

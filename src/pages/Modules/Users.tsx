@@ -447,7 +447,7 @@ export default function UsersPage() {
             className="mt-6 grid grid-cols-1 gap-3 lg:grid-cols-5 min-w-full text-left text-sm text-gray-800 dark:text-gray-100"
           >
             <input
-              className="h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500"
+              className="h-11 rounded-sm border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500"
               placeholder="Buscar por nombre, correo, RFC, CURP o empleado"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
@@ -492,7 +492,7 @@ export default function UsersPage() {
             <div className="flex gap-3">
               <button
                 type="submit"
-                className="inline-flex h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                className="inline-flex h-11 items-center justify-center rounded-sm border border-slate-200 bg-white px-5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
               >
                 Buscar
               </button>
@@ -500,7 +500,7 @@ export default function UsersPage() {
               <button
                 type="button"
                 onClick={limpiarFiltros}
-                className="inline-flex h-11 items-center justify-center rounded-lg border border-slate-200 bg-white px-5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                className="inline-flex h-11 items-center justify-center rounded-sm border border-slate-200 bg-white px-5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
               >
                 Limpiar
               </button>

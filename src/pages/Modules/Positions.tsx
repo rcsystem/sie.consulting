@@ -40,10 +40,10 @@ export default function PositionsPage() {
   const inputArchivoRef = useRef<HTMLInputElement | null>(null);
 
   const claseBotonSecundario =
-    "inline-flex h-11 items-center justify-center rounded-lg border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white";
+    "inline-flex h-11 items-center justify-center rounded-sm border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white";
 
   const claseBotonPrimario =
-    "inline-flex h-11 items-center justify-center rounded-lg bg-brand-500 px-4 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-60";
+    "inline-flex h-11 items-center justify-center rounded-sm bg-brand-500 px-4 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-60";
 
   const cargarDepartamentos = async () => {
     try {
@@ -392,14 +392,14 @@ export default function PositionsPage() {
             className="mt-6 grid grid-cols-1 gap-3 lg:grid-cols-4"
           >
             <input
-              className="h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+              className="h-11 rounded-sm border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
               placeholder="Buscar por nombre, clave o descripción"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
             />
 
             <select
-              className="h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+              className="h-11 rounded-sm border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
               value={filtroActivo}
               onChange={(e) => setFiltroActivo(e.target.value)}
             >
@@ -409,7 +409,7 @@ export default function PositionsPage() {
             </select>
 
             <select
-              className="h-11 rounded-lg border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+              className="h-11 rounded-sm border border-slate-200 bg-white px-4 text-sm text-slate-700 outline-none focus:border-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
               value={filtroDepartamento}
               onChange={(e) => setFiltroDepartamento(e.target.value)}
             >
@@ -524,7 +524,7 @@ export default function PositionsPage() {
                           <button
                             type="button"
                             onClick={() => abrirEditar(puesto)}
-                            className="inline-flex h-10 items-center justify-center rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200"
+                            className="inline-flex h-10 items-center justify-center rounded-sm border border-gray-300 px-4 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200"
                           >
                             Editar
                           </button>
@@ -532,7 +532,7 @@ export default function PositionsPage() {
                           <button
                             type="button"
                             onClick={() => cambiarEstatus(puesto)}
-                            className={`inline-flex h-10 items-center justify-center rounded-lg px-4 text-sm font-medium text-white ${
+                            className={`inline-flex h-10 items-center justify-center rounded-sm px-4 text-sm font-medium text-white ${
                               puesto.is_active
                                 ? "bg-red-500 hover:bg-red-600"
                                 : "bg-green-500 hover:bg-green-600"
@@ -562,7 +562,7 @@ export default function PositionsPage() {
                   setPorPagina(nuevoLimite);
                   await cargarPuestos(1, nuevoLimite);
                 }}
-                className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                className="h-10 rounded-sm border border-gray-300 bg-white px-3 text-sm dark:border-gray-700 dark:bg-gray-900 dark:text-white"
               >
                 {[10, 15, 20, 50].map((item) => (
                   <option key={item} value={item}>

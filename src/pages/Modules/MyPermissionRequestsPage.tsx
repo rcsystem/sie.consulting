@@ -1,18 +1,28 @@
+/**
+ * Componente MyPermissionRequestsPage
+ *
+ * Página para que los usuarios vean y gestionen sus propias solicitudes de permisos.
+ * Permite crear nuevas solicitudes, cancelar pendientes y ver PDFs.
+ * Restringido solo a las solicitudes del usuario actual.
+ */
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import PageMeta from "../../components/common/PageMeta";
 import api from "../../lib/api";
 import PermissionRequestFormModal from "../../components/PermissionRequests/PermissionRequestFormModal";
 import PermissionRequestsTable from "../../components/PermissionRequests/PermissionRequestsTable";
+import PermissionRequestPdfModal from "../../components/PermissionRequests/PermissionRequestPdfModal";
 import type {
   RespuestaPaginadaSolicitudesPermiso,
   SolicitudPermiso,
 } from "../../types/permissionRequests";
 
 export default function MyPermissionRequestsPage() {
+  // Estado para solicitudes de permisos del usuario y UI
   const [solicitudes, setSolicitudes] = useState<SolicitudPermiso[]>([]);
   const [cargando, setCargando] = useState(false);
 
+  // Estados de paginación
   const [paginaActual, setPaginaActual] = useState(1);
   const [porPagina, setPorPagina] = useState(10);
   const [ultimaPagina, setUltimaPagina] = useState(1);
@@ -20,13 +30,26 @@ export default function MyPermissionRequestsPage() {
   const [desde, setDesde] = useState<number | null>(null);
   const [hasta, setHasta] = useState<number | null>(null);
 
+  // Estados de modal para visualización de PDF y creación de nuevas solicitudes
+  const [modalPdfAbierto, setModalPdfAbierto] = useState(false);
+  const [solicitudPdf, setSolicitudPdf] = useState<SolicitudPermiso | null>(
+    null,
+  );
+
+  // Abrir modal de PDF para una solicitud específica
+  const abrirPermiso = (solicitud: SolicitudPermiso) => {
+    setSolicitudPdf(solicitud);
+    setModalPdfAbierto(true);
+  };
+
   const [modalNuevoAbierto, setModalNuevoAbierto] = useState(false);
 
+  // Clases CSS para botones
   const claseBotonPrimario =
-    "inline-flex h-11 items-center justify-center rounded-lg bg-brand-500 px-4 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-60";
+    "inline-flex h-11 items-center justify-center rounded-sm bg-brand-500 px-4 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:opacity-60";
 
   const claseBotonSecundario =
-    "inline-flex h-10 items-center justify-center rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800";
+    "inline-flex h-10 items-center justify-center rounded-sm border border-gray-300 px-4 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-200 dark:hover:bg-gray-800";
 
   const cargarMisSolicitudes = async (
     pagina = paginaActual,
@@ -41,6 +64,7 @@ export default function MyPermissionRequestsPage() {
           params: {
             page: pagina,
             per_page: limite,
+            is_active: true,
           },
         },
       );
@@ -65,91 +89,91 @@ export default function MyPermissionRequestsPage() {
     cargarMisSolicitudes(1, porPagina);
   }, []);
 
-const guardarSolicitud = async (payload: Record<string, unknown>) => {
-  console.log("Antes de guardar");
+  // Guardar una nueva solicitud de permiso y recargar la lista
+  const guardarSolicitud = async (payload: Record<string, unknown>) => {
+    console.log("Antes de guardar");
 
-  try {
-    const respuesta = await api.post("/permission-requests", payload);
-    console.log("POST OK:", respuesta.data);
-    setModalNuevoAbierto(false);
-  } catch (error) {
-    console.error("POST falló:", error);
-    throw error;
-  }
+    try {
+      const respuesta = await api.post("/permission-requests", payload);
+      console.log("POST OK:", respuesta.data);
+      setModalNuevoAbierto(false);
+    } catch (error) {
+      console.error("POST falló:", error);
+      throw error;
+    }
 
-  console.log("Antes de recargar mis permisos");
+    console.log("Antes de recargar mis permisos");
 
-  try {
-    await cargarMisSolicitudes(1, porPagina);
-    console.log("Recarga OK");
-  } catch (error) {
-    console.error("Recarga falló:", error);
-  }
-};
+    try {
+      await cargarMisSolicitudes(1, porPagina);
+      console.log("Recarga OK");
+    } catch (error) {
+      console.error("Recarga falló:", error);
+    }
+  };
 
-
+  // Cancelar una solicitud de permiso con diálogo de confirmación
   const cancelar = async (solicitud: SolicitudPermiso) => {
-  const resultado = await Swal.fire({
-    title: "¿Cancelar solicitud?",
-    text: "La solicitud cambiará a estatus cancelado.",
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonText: "Sí, cancelar",
-    cancelButtonText: "Volver",
-    reverseButtons: true,
-    focusCancel: true,
-    confirmButtonColor: "#d90606",
-    cancelButtonColor: "#d6dbe4",
-  });
-
-  if (!resultado.isConfirmed) return;
-
-  try {
-    await api.patch(`/permission-requests/${solicitud.id}/cancel`);
-
-    await Swal.fire({
-      title: "Solicitud cancelada",
-      text: "La solicitud fue cancelada correctamente.",
-      icon: "success",
-      confirmButtonText: "Aceptar",
-      confirmButtonColor: "#16a34a",
+    const resultado = await Swal.fire({
+      title: "¿Cancelar solicitud?",
+      text: "La solicitud será ocultada y no se mostrará más en la lista.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, cancelar",
+      cancelButtonText: "Volver",
+      reverseButtons: true,
+      focusCancel: true,
+      confirmButtonColor: "#d90606",
+      cancelButtonColor: "#d6dbe4",
     });
 
-    await cargarMisSolicitudes(paginaActual, porPagina);
-  } catch (error) {
-    console.error(error);
+    if (!resultado.isConfirmed) return;
 
-    await Swal.fire({
-      title: "No fue posible cancelar",
-      text: "Ocurrió un error al cancelar la solicitud.",
-      icon: "error",
-      confirmButtonText: "Cerrar",
-      confirmButtonColor: "#dc2626",
-    });
+    try {
+      await api.patch(`/permission-requests/${solicitud.id}`, {
+        is_active: false
+      });
+
+      await Swal.fire({
+        title: "Solicitud cancelada",
+        text: "La solicitud fue cancelada correctamente.",
+        icon: "success",
+        confirmButtonText: "Aceptar",
+        confirmButtonColor: "#16a34a",
+      });
+
+      await cargarMisSolicitudes(paginaActual, porPagina);
+    } catch (error) {
+      console.error(error);
+
+      await Swal.fire({
+        title: "No fue posible cancelar",
+        text: "Ocurrió un error al cancelar la solicitud.",
+        icon: "error",
+        confirmButtonText: "Cerrar",
+        confirmButtonColor: "#dc2626",
+      });
+    }
+  };
+
+  function IconoRechazar() {
+    return (
+      <svg
+        viewBox="0 0 20 20"
+        fill="none"
+        className="h-4 w-4"
+        aria-hidden="true"
+      >
+        <path
+          d="M6 6l8 8M14 6l-8 8"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
   }
-};
-
-
-
-function IconoRechazar() {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      className="h-4 w-4"
-      aria-hidden="true"
-    >
-      <path
-        d="M6 6l8 8M14 6l-8 8"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 
   return (
     <>
@@ -186,6 +210,7 @@ function IconoRechazar() {
               cargando={cargando}
               mostrarEmpleado={false}
               onCancelar={cancelar}
+              onVerPermiso={abrirPermiso}
             />
           </div>
 
@@ -202,7 +227,7 @@ function IconoRechazar() {
                   setPorPagina(nuevoLimite);
                   await cargarMisSolicitudes(1, nuevoLimite);
                 }}
-                className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+                className="rounded-sm border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
               >
                 {[10, 15, 20, 50].map((opcion) => (
                   <option key={opcion} value={opcion}>
@@ -242,6 +267,14 @@ function IconoRechazar() {
           </div>
         </div>
       </div>
+      <PermissionRequestPdfModal
+        abierto={modalPdfAbierto}
+        solicitud={solicitudPdf}
+        onClose={() => {
+          setModalPdfAbierto(false);
+          setSolicitudPdf(null);
+        }}
+      />
 
       <PermissionRequestFormModal
         abierto={modalNuevoAbierto}
