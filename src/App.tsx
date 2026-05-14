@@ -22,6 +22,10 @@ import ImportUsers from "./pages/Users/ImportUsers";
 
 import MyPermissionRequestsPage from "./pages/Modules/MyPermissionRequestsPage";
 import AuthorizePermissionRequestsPage from "./pages/Modules/AuthorizePermissionRequestsPage";
+import TravelsPage from "./pages/Modules/TravelsPage";
+import AttendancePage from "./pages/Modules/AttendancePage";
+import VacationsPage from "./pages/Modules/VacationsPage";
+import VacationPolicyPage from "./pages/Modules/VacationPolicyPage";
 
 
 export default function App() {
@@ -52,6 +56,12 @@ export default function App() {
             <Route path="/importar-usuarios" element={<ImportUsersPage />} />
             <Route path="/configuracion" element={<SettingsPage />} />
             <Route path="/mi-perfil" element={<MyProfilePage />} />
+            <Route path="/vacaciones" element={<VacationsPage />} />
+            <Route path="/asistencia" element={<AttendancePage />} />
+            <Route
+              path="/politica-vacaciones"
+              element={<VacationPolicyPage />}
+            />
             <Route
               path="/cambiar-contrasena"
               element={<ChangePasswordPage />}
@@ -65,6 +75,7 @@ export default function App() {
               path="/autorizar-permisos"
               element={<AuthorizePermissionRequestsPage />}
             />
+            <Route path="/travels" element={<TravelsPage />} />
           </Route>
         </Route>
 

@@ -5,6 +5,7 @@ import {
   ListIcon,
   PageIcon,
   TableIcon,
+  TimeIcon,
   UserCircleIcon,
 } from "../icons";
 
@@ -48,9 +49,30 @@ export const navItems: NavItem[] = [
       {
         name: "Autorizar permisos",
         path: "/autorizar-permisos",
-        roles: ["super_admin", "admin", "rh"],
+        roles: ["super_admin", "admin", "rh", "manager", "director"],
       },
     ],
+  },
+  {
+    icon: <CalenderIcon />,
+    name: "Vacaciones",
+    subItems: [
+      {
+        name: "Mis vacaciones",
+        path: "/vacaciones",
+      },
+      {
+        name: "Autorizar vacaciones",
+        path: "/vacaciones",
+        roles: ["super_admin", "admin", "rh", "manager", "director"],
+      },
+    ],
+  },
+  {
+    icon: <TimeIcon />,
+    name: "Asistencia",
+    path: "/asistencia",
+    roles: ["super_admin", "admin", "rh", "manager", "director"],
   },
   {
     icon: <UserCircleIcon />,
@@ -70,6 +92,12 @@ export const navItems: NavItem[] = [
         roles: ["super_admin", "rh"],
       },
     ],
+  },
+  {
+    icon: <CalenderIcon />,
+    name: "Viaticos & Gastos",
+    path: "/travels",
+    roles: ["super_admin", "rh", "director", "manager"],
   },
   {
     icon: <TableIcon />,
@@ -95,6 +123,12 @@ export const navItems: NavItem[] = [
     name: "Calendario",
     path: "/calendar",
     roles: ["super_admin", "rh", "director", "manager"],
+  },
+  {
+    icon: <CalenderIcon />,
+    name: "Política de vacaciones",
+    path: "/politica-vacaciones",
+    roles: ["super_admin", "rh"],
   },
 ];
 

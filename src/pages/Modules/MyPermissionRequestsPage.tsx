@@ -130,9 +130,7 @@ export default function MyPermissionRequestsPage() {
     if (!resultado.isConfirmed) return;
 
     try {
-      await api.patch(`/permission-requests/${solicitud.id}`, {
-        is_active: false
-      });
+     await api.patch(`/permission-requests/${solicitud.id}/cancel`);
 
       await Swal.fire({
         title: "Solicitud cancelada",
@@ -149,6 +147,48 @@ export default function MyPermissionRequestsPage() {
       await Swal.fire({
         title: "No fue posible cancelar",
         text: "Ocurrió un error al cancelar la solicitud.",
+        icon: "error",
+        confirmButtonText: "Cerrar",
+        confirmButtonColor: "#dc2626",
+      });
+    }
+  };
+
+
+  const eliminar = async (solicitud: SolicitudPermiso) => {
+    const resultado = await Swal.fire({
+      title: "¿Eliminar solicitud?",
+      text: "La solicitud se marcará como inactiva y dejará de verse en el sistema, pero seguirá guardada en la base de datos.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Volver",
+      reverseButtons: true,
+      focusCancel: true,
+      confirmButtonColor: "#dc2626",
+      cancelButtonColor: "#d6dbe4",
+    });
+
+    if (!resultado.isConfirmed) return;
+
+    try {
+      await api.delete(`/permission-requests/${solicitud.id}`);
+
+      await Swal.fire({
+        title: "Solicitud eliminada",
+        text: "La solicitud fue ocultada correctamente.",
+        icon: "success",
+        confirmButtonText: "Aceptar",
+        confirmButtonColor: "#16a34a",
+      });
+
+      await cargarMisSolicitudes(paginaActual, porPagina);
+    } catch (error) {
+      console.error(error);
+
+      await Swal.fire({
+        title: "No fue posible eliminar",
+        text: "Ocurrió un error al ocultar la solicitud.",
         icon: "error",
         confirmButtonText: "Cerrar",
         confirmButtonColor: "#dc2626",
@@ -210,6 +250,7 @@ export default function MyPermissionRequestsPage() {
               cargando={cargando}
               mostrarEmpleado={false}
               onCancelar={cancelar}
+              onEliminar={eliminar}
               onVerPermiso={abrirPermiso}
             />
           </div>

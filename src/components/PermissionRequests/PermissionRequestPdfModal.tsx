@@ -294,15 +294,37 @@ export default function PermissionRequestPdfModal({
                       </div>
                     </>
                   )}
-                  {solicitud.days_count && (
-                    <div>
-                      <label className="block text-sm font-medium text-slate-600 dark:text-slate-400">
-                        Días de Ausencia
-                      </label>
-                      <p className="mt-1 text-sm text-slate-900 dark:text-white">
-                        {solicitud.days_count} día{solicitud.days_count !== 1 ? "s" : ""}
-                      </p>
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-600 dark:text-slate-400">
+                      Fecha inicio
+                    </label>
+                    <p className="mt-1 text-sm text-slate-900 dark:text-white">
+                      {formatearFecha(solicitud.date)}
+                    </p>
+                  </div>
+
+                  {solicitud.request_kind === "inasistencia" && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-slate-600 dark:text-slate-400">
+                          Fecha fin
+                        </label>
+                        <p className="mt-1 text-sm text-slate-900 dark:text-white">
+                          {solicitud.end_date
+                            ? formatearFecha(solicitud.end_date)
+                            : "N/A"}
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-slate-600 dark:text-slate-400">
+                          Días tomados
+                        </label>
+                        <p className="mt-1 text-sm text-slate-900 dark:text-white">
+                          {solicitud.days_count ?? "N/A"}
+                        </p>
+                      </div>
+                    </>
                   )}
                 </div>
                 <div className="mt-4">
@@ -316,15 +338,19 @@ export default function PermissionRequestPdfModal({
               </div>
 
               {/* Approval Information */}
-              {(solicitud.status === "aprobado" || solicitud.status === "rechazado") && (
+              {(solicitud.status === "aprobado" ||
+                solicitud.status === "rechazado") && (
                 <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
                   <h4 className="mb-4 text-lg font-semibold text-slate-900 dark:text-white">
-                    Información de {solicitud.status === "aprobado" ? "Aprobación" : "Rechazo"}
+                    Información de{" "}
+                    {solicitud.status === "aprobado" ? "Aprobación" : "Rechazo"}
                   </h4>
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div>
                       <label className="block text-sm font-medium text-slate-600 dark:text-slate-400">
-                        {solicitud.status === "aprobado" ? "Aprobado por" : "Rechazado por"}
+                        {solicitud.status === "aprobado"
+                          ? "Aprobado por"
+                          : "Rechazado por"}
                       </label>
                       <p className="mt-1 text-sm text-slate-900 dark:text-white">
                         {solicitud.approver?.full_name || "N/A"}
@@ -340,22 +366,28 @@ export default function PermissionRequestPdfModal({
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-slate-600 dark:text-slate-400">
-                        Fecha de {solicitud.status === "aprobado" ? "Aprobación" : "Rechazo"}
+                        Fecha de{" "}
+                        {solicitud.status === "aprobado"
+                          ? "Aprobación"
+                          : "Rechazo"}
                       </label>
                       <p className="mt-1 text-sm text-slate-900 dark:text-white">
-                        {solicitud.approved_at ? formatearFecha(solicitud.approved_at) : "N/A"}
+                        {solicitud.approved_at
+                          ? formatearFecha(solicitud.approved_at)
+                          : "N/A"}
                       </p>
                     </div>
-                    {solicitud.status === "rechazado" && solicitud.rejection_reason && (
-                      <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-slate-600 dark:text-slate-400">
-                          Motivo del Rechazo
-                        </label>
-                        <p className="mt-1 text-sm text-slate-900 dark:text-white">
-                          {solicitud.rejection_reason}
-                        </p>
-                      </div>
-                    )}
+                    {solicitud.status === "rechazado" &&
+                      solicitud.rejection_reason && (
+                        <div className="md:col-span-2">
+                          <label className="block text-sm font-medium text-slate-600 dark:text-slate-400">
+                            Motivo del Rechazo
+                          </label>
+                          <p className="mt-1 text-sm text-slate-900 dark:text-white">
+                            {solicitud.rejection_reason}
+                          </p>
+                        </div>
+                      )}
                   </div>
                 </div>
               )}
@@ -380,7 +412,9 @@ export default function PermissionRequestPdfModal({
                         Fecha de Cancelación
                       </label>
                       <p className="mt-1 text-sm text-slate-900 dark:text-white">
-                        {solicitud.cancelled_at ? formatearFecha(solicitud.cancelled_at) : "N/A"}
+                        {solicitud.cancelled_at
+                          ? formatearFecha(solicitud.cancelled_at)
+                          : "N/A"}
                       </p>
                     </div>
                   </div>
@@ -398,7 +432,9 @@ export default function PermissionRequestPdfModal({
                       Fecha de Creación
                     </label>
                     <p className="mt-1 text-sm text-slate-900 dark:text-white">
-                      {solicitud.created_at ? formatearFecha(solicitud.created_at) : "N/A"}
+                      {solicitud.created_at
+                        ? formatearFecha(solicitud.created_at)
+                        : "N/A"}
                     </p>
                   </div>
                   <div>
@@ -406,7 +442,9 @@ export default function PermissionRequestPdfModal({
                       Última Actualización
                     </label>
                     <p className="mt-1 text-sm text-slate-900 dark:text-white">
-                      {solicitud.updated_at ? formatearFecha(solicitud.updated_at) : "N/A"}
+                      {solicitud.updated_at
+                        ? formatearFecha(solicitud.updated_at)
+                        : "N/A"}
                     </p>
                   </div>
                 </div>

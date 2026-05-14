@@ -8,8 +8,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <div className="flex h-full items-center justify-center p-12">
             <div className="max-w-md text-center lg:text-left">
               <h2 className="text-4xl font-bold text-gray-900 dark:text-white">
-                SIE - Desde permisos hasta nómina: todo integrado, todo
-                controlado, todo fácil.
+                ZENDA - Desde acceso hasta permisos & vacaciones: todo
+                integrado, todo controlado, todo fácil.
               </h2>
               <p className="mt-4 text-base text-gray-600 dark:text-gray-400">
                 Transforma la gestión de tu información en una plataforma única

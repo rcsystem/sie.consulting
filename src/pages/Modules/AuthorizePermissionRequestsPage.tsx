@@ -392,6 +392,7 @@ export default function AuthorizePermissionRequestsPage() {
               onAprobar={aprobar}
               onRechazar={abrirRechazo}
               onCancelar={cancelar}
+              onEliminar={eliminar}
               onVerPermiso={abrirPermiso}
             />
           </div>

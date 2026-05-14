@@ -19,6 +19,7 @@ type Props = {
   onAprobar?: (solicitud: SolicitudPermiso) => void;
   onRechazar?: (solicitud: SolicitudPermiso) => void;
   onCancelar?: (solicitud: SolicitudPermiso) => void;
+  onEliminar?: (solicitud: SolicitudPermiso) => void;
   onVerPermiso?: (solicitud: SolicitudPermiso) => void;
   mostrarEmpleado?: boolean;
 };
@@ -65,6 +66,20 @@ function IconoCancelar() {
   );
 }
 
+function IconoEliminar() {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4" aria-hidden="true">
+      <path
+        d="M5 7h10M8 7V5.8c0-.44.36-.8.8-.8h2.4c.44 0 .8.36.8.8V7m-5.5 0v7.2c0 .44.36.8.8.8h5.4c.44 0 .8-.36.8-.8V7"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function IconoVerPermiso() {
   return (
     <svg viewBox="0 0 20 20" fill="none" className="h-4 w-4" aria-hidden="true">
@@ -91,6 +106,7 @@ export default function PermissionRequestsTable({
   onAprobar,
   onRechazar,
   onCancelar,
+  onEliminar,
   onVerPermiso,
   mostrarEmpleado = true,
 }: Props) {
@@ -158,12 +174,28 @@ export default function PermissionRequestsTable({
 
                 <td className="px-4 py-4">
                   <div>
-                    <p className="font-medium text-gray-900 dark:text-white">
-                      {solicitud.date}
-                    </p>
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      Folio #{solicitud.id}
-                    </p>
+                    {solicitud.request_kind === "inasistencia" ? (
+                      <>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          Inicio: {solicitud.date}
+                        </p>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                          Fin: {solicitud.end_date ?? solicitud.date}
+                        </p>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                          Días tomados: {solicitud.days_count ?? 1}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {solicitud.date}
+                        </p>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                          Folio #{solicitud.id}
+                        </p>
+                      </>
+                    )}
                   </div>
                 </td>
 
@@ -251,15 +283,15 @@ export default function PermissionRequestsTable({
                       </button>
                     ) : null}
 
-                    {onCancelar && solicitud.status === "pendiente" ? (
+                    {onEliminar ? (
                       <button
                         type="button"
-                        onClick={() => onCancelar(solicitud)}
-                        title="Cancelar"
-                        aria-label="Cancelar solicitud"
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-amber-200 bg-amber-50 text-amber-600 transition hover:bg-amber-100 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-400 dark:hover:bg-amber-900/30"
+                        onClick={() => onEliminar(solicitud)}
+                        title="Eliminar"
+                        aria-label="Eliminar solicitud"
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-sm border border-gray-200 bg-gray-50 text-gray-600 transition hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
                       >
-                        <IconoCancelar />
+                        <IconoEliminar />
                       </button>
                     ) : null}
                   </div>

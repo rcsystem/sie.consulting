@@ -39,8 +39,8 @@ export default function SignInForm() {
       <div className="mx-auto flex w-full max-w-md flex-1 items-start justify-center px-4 pt-10 lg:pt-16">
         <div className="w-full">
           <div className="mb-8 text-center lg:text-left">
-            <div className="mb-4 inline-flex h-14 w-14 items-center justify-center bg-brand-500 text-xl font-bold text-white">
-              RH
+            <div className="mb-4 inline-flex h-16 w-18 items-center justify-center bg-brand-500 text-xl font-bold text-white">
+              Zenda
             </div>
             <h1 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
               Bienvenido

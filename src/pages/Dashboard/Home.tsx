@@ -173,8 +173,8 @@ export default function Home() {
   return (
     <>
       <PageMeta
-        title="Dashboard | SIE"
-        description="Resumen principal del sistema SIE para Recursos Humanos, con métricas clave, accesos rápidos y calendario de eventos."
+        title="Dashboard | Zenda"
+        description="Resumen principal del sistema Zenda para Recursos Humanos, con métricas clave, accesos rápidos y calendario de eventos."
       />
 
       {cargando ? (

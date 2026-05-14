@@ -6,43 +6,65 @@ type Props = {
 };
 
 function getBorderClass(event: DashboardEvent) {
+  // Vacaciones: verde = aprobado final, naranja = pendiente aprobación RH
+  if (event.type === "vacation") {
+    return event.color === "orange"
+      ? "border-l-orange-400"
+      : "border-l-green-500";
+  }
+
   if (event.color) {
     switch (event.color) {
-      case "green":
-        return "border-l-green-500";
-      case "blue":
-        return "border-l-blue-500";
-      case "orange":
-        return "border-l-orange-500";
-      case "red":
-        return "border-l-red-500";
-      case "purple":
-        return "border-l-purple-500";
-      case "indigo":
-        return "border-l-indigo-500";
-      case "yellow":
-        return "border-l-yellow-500";
-      default:
-        break;
+      case "green":   return "border-l-green-500";
+      case "blue":    return "border-l-blue-500";
+      case "orange":  return "border-l-orange-400";
+      case "red":     return "border-l-red-500";
+      case "purple":  return "border-l-purple-500";
+      case "indigo":  return "border-l-indigo-500";
+      case "yellow":  return "border-l-yellow-500";
+      default: break;
     }
   }
 
   switch (event.type) {
-    case "payday":
-      return "border-l-green-500";
-    case "birthday":
-      return "border-l-blue-500";
-    case "work_anniversary":
-      return "border-l-orange-500";
-    default:
-      return "border-l-gray-400";
+    case "payday":          return "border-l-green-500";
+    case "birthday":        return "border-l-blue-500";
+    case "work_anniversary":return "border-l-yellow-500";
+    default:                return "border-l-gray-400";
+  }
+}
+
+function getBadge(event: DashboardEvent) {
+  if (event.type === "vacation") {
+    const esAprobado = event.color === "green";
+    return (
+      <span
+        className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${
+          esAprobado
+            ? "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+            : "bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300"
+        }`}
+      >
+        {esAprobado ? "Aprobadas" : "Pend. RH"}
+      </span>
+    );
+  }
+  return null;
+}
+
+// Icono pequeño por tipo de evento
+function getEmoji(event: DashboardEvent): string {
+  switch (event.type) {
+    case "vacation":        return "🌴";
+    case "birthday":        return "🎂";
+    case "work_anniversary":return "🎉";
+    case "payday":          return "💰";
+    default:                return "📅";
   }
 }
 
 function formatearFecha(fecha: string) {
-  const fechaConvertida = new Date(`${fecha}T00:00:00`);
-
-  return fechaConvertida.toLocaleDateString("es-MX", {
+  return new Date(`${fecha}T00:00:00`).toLocaleDateString("es-MX", {
     day: "2-digit",
     month: "short",
     year: "numeric",
@@ -76,20 +98,27 @@ export default function UpcomingEventsCard({
               key={event.id}
               className={`rounded-2xl border border-gray-200 border-l-4 bg-gray-50/70 p-3 dark:border-gray-800 dark:bg-white/[0.02] ${getBorderClass(event)}`}
             >
-              <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                {event.title}
-              </p>
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">
+                  {getEmoji(event)} {event.title}
+                </p>
+                {getBadge(event)}
+              </div>
 
               <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                 {formatearFecha(event.date)}
+                {/* Mostrar rango completo de vacaciones si está disponible */}
+                {"date_range" in event && event.date_range
+                  ? ` · ${event.date_range}`
+                  : ""}
               </p>
 
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
                 {event.department ?? "General"}
               </p>
 
               {event.description ? (
-                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                <p className="mt-1.5 text-xs text-gray-400 dark:text-gray-500 line-clamp-2">
                   {event.description}
                 </p>
               ) : null}

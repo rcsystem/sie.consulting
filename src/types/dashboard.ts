@@ -12,6 +12,11 @@ export interface DashboardEvent {
   color?: string;
   department?: string | null;
   description?: string | null;
+  // Campos extras para vacaciones
+  leave_type?: string | null;
+  status?: string | null;
+  days_total?: number | null;
+  date_range?: string | null;
 }
 
 export interface DashboardResponse {

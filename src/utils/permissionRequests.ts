@@ -1,3 +1,5 @@
+import type { SolicitudPermiso } from "../types/permissionRequests";
+
 export function traducirTipoEmpleado(valor?: string | null) {
   switch (valor) {
     case "administrativo":
@@ -53,22 +55,21 @@ export function claseBadgeEstatusSolicitud(valor?: string | null) {
   }
 }
 
-export function describirDetalleSolicitud(
-  requestKind?: string | null,
-  entryTime?: string | null,
-  exitTime?: string | null,
-  daysCount?: string | number | null,
-) {
-  if (requestKind === "entrada") {
-    return entryTime ? `Entrada: ${entryTime}` : "-";
+export function describirDetalleSolicitud(solicitud: SolicitudPermiso) {
+  if (solicitud.request_kind === "entrada") {
+    return solicitud.entry_time ? `Entrada: ${solicitud.entry_time}` : "-";
   }
 
-  if (requestKind === "salida") {
-    return exitTime ? `Salida: ${exitTime}` : "-";
+  if (solicitud.request_kind === "salida") {
+    return solicitud.exit_time ? `Salida: ${solicitud.exit_time}` : "-";
   }
 
-  if (requestKind === "inasistencia") {
-    return `${daysCount ?? 1} día(s)`;
+  if (solicitud.request_kind === "inasistencia") {
+    const inicio = solicitud.date ?? "-";
+    const fin = solicitud.end_date ?? solicitud.date ?? "-";
+    const dias = solicitud.days_count ?? 1;
+
+    return `${dias} día(s) · ${inicio} al ${fin}`;
   }
 
   return "-";
