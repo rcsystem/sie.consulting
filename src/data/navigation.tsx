@@ -4,6 +4,7 @@ import {
   GridIcon,
   ListIcon,
   PageIcon,
+  DollarLineIcon,
   TableIcon,
   TimeIcon,
   UserCircleIcon,
@@ -98,6 +99,13 @@ export const navItems: NavItem[] = [
     name: "Viaticos & Gastos",
     path: "/travels",
     roles: ["super_admin", "rh", "director", "manager"],
+  },
+
+  {
+    icon: <DollarLineIcon />,
+    name: "Nómina",
+    path: "/nomina",
+    roles: ["super_admin", "admin", "rh"],
   },
   {
     icon: <TableIcon />,

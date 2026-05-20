@@ -26,6 +26,7 @@ import TravelsPage from "./pages/Modules/TravelsPage";
 import AttendancePage from "./pages/Modules/AttendancePage";
 import VacationsPage from "./pages/Modules/VacationsPage";
 import VacationPolicyPage from "./pages/Modules/VacationPolicyPage";
+import PayrollPage from "./pages/Modules/PayrollPage";
 
 
 export default function App() {
@@ -76,6 +77,7 @@ export default function App() {
               element={<AuthorizePermissionRequestsPage />}
             />
             <Route path="/travels" element={<TravelsPage />} />
+            <Route path="/nomina" element={<PayrollPage />} />
           </Route>
         </Route>
 
