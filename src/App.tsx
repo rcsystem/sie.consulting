@@ -27,6 +27,7 @@ import AttendancePage from "./pages/Modules/AttendancePage";
 import VacationsPage from "./pages/Modules/VacationsPage";
 import VacationPolicyPage from "./pages/Modules/VacationPolicyPage";
 import PayrollPage from "./pages/Modules/PayrollPage";
+import ZktecoDevicesPage from "./pages/Modules/ZktecoDevicesPage";
 
 
 export default function App() {
@@ -59,6 +60,7 @@ export default function App() {
             <Route path="/mi-perfil" element={<MyProfilePage />} />
             <Route path="/vacaciones" element={<VacationsPage />} />
             <Route path="/asistencia" element={<AttendancePage />} />
+            <Route path="/asistencia/relojes" element={<ZktecoDevicesPage />} />
             <Route
               path="/politica-vacaciones"
               element={<VacationPolicyPage />}

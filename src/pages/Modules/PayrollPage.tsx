@@ -341,7 +341,7 @@ function EmpleadosNomina() {
       const resultado = await importar.mutateAsync(archivo);
       const resumen = resultado.summary;
       const errores = resultado.errors ?? [];
-      const htmlErrores = errores.slice(0, 10).map((error) => (
+      const htmlErrores = errores.slice(0, 10).map((error: any) => (
         `<li><strong>Fila ${escapeHtml(error.fila)}</strong> · ${escapeHtml(error.campo)}: ${escapeHtml(error.mensaje)}</li>`
       )).join("");
 
@@ -857,7 +857,7 @@ function ConceptosNomina() {
       const resultado = await importar.mutateAsync(archivo);
       const resumen = resultado.summary;
       const errores = resultado.errors ?? [];
-      const htmlErrores = errores.slice(0, 10).map((error) => (
+      const htmlErrores = errores.slice(0, 10).map((error: any) => (
         `<li><strong>Fila ${escapeHtml(error.fila)}</strong> · ${escapeHtml(error.campo)}: ${escapeHtml(error.mensaje)}</li>`
       )).join("");
 

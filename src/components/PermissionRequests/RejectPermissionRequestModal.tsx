@@ -15,8 +15,9 @@ import type {
 type Props = {
   abierto: boolean;
   onClose: () => void;
-  onGuardado: () => Promise<void> | void;
-  solicitud: SolicitudPermiso | null;
+  onGuardado?: () => Promise<void> | void;
+  solicitud?: SolicitudPermiso | null;
+  onSubmit?: (motivo: string) => Promise<void> | void;
 };
 
 export default function RejectPermissionRequestModal({
@@ -24,6 +25,7 @@ export default function RejectPermissionRequestModal({
   onClose,
   onGuardado,
   solicitud,
+  onSubmit,
 }: Props) {
   const [motivo, setMotivo] = useState("");
   const [guardando, setGuardando] = useState(false);
@@ -60,20 +62,24 @@ export default function RejectPermissionRequestModal({
   const rechazar = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!solicitud) return;
+    if (!solicitud && !onSubmit) return;
 
     setGuardando(true);
     setError("");
 
     try {
-      await api.patch<RespuestaSolicitudPermiso>(
-        `/permission-requests/${solicitud.id}/reject`,
-        {
-          rejection_reason: motivo.trim(),
-        },
-      );
+      if (onSubmit) {
+        await onSubmit(motivo.trim());
+      } else if (solicitud) {
+        await api.patch<RespuestaSolicitudPermiso>(
+          `/permission-requests/${solicitud.id}/reject`,
+          {
+            rejection_reason: motivo.trim(),
+          },
+        );
+      }
 
-      await onGuardado();
+      await onGuardado?.();
       onClose();
     } catch (error: any) {
       setError(

@@ -48,6 +48,8 @@ export interface LeaveRequest {
     email: string;
     employee_number?: string | null;
     hire_date?: string | null;
+    department?: { id?: number; name: string } | null;
+    position?: { id?: number; name: string } | null;
   } | null;
   requester?: { id: number; full_name: string } | null;
   manager_approver?: { id: number; full_name: string } | null;

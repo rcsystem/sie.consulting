@@ -15,6 +15,7 @@ type Props = {
   onClose: () => void;
   onGuardado: () => void;
   usuarioEditar?: UsuarioSistema | null;
+  cargandoDetalle?: boolean;
 };
 
 const estadoInicial: FormularioUsuario = {

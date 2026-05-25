@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Swal from "sweetalert2";
 import PageMeta from "../../components/common/PageMeta";
 import PermissionRequestFormModal from "../../components/PermissionRequests/PermissionRequestFormModal";
 import PermissionRequestsTable from "../../components/PermissionRequests/PermissionRequestsTable";
@@ -143,7 +144,7 @@ export default function PermissionRequestsPage() {
       reverseButtons: true,
       confirmButtonColor: "#d97706",
       cancelButtonColor: "#6b7280",
-      inputValidator: (v) => (!v?.trim() ? "Debes capturar el motivo." : null),
+      inputValidator: (v: string) => (!v?.trim() ? "Debes capturar el motivo." : null),
     });
 
     if (!isConfirmed || !motivo) return;

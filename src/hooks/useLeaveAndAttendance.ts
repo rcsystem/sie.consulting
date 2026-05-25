@@ -213,3 +213,7 @@ export function useZktecoDevices() {
     staleTime: 5 * 60_000,
   });
 }
+
+// Alias de compatibilidad para pantallas antiguas.
+export const useAprobarVacacionManager = useAprobarVacacion;
+export const useAprobarVacacionRh = useAprobarVacacion;

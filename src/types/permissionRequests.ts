@@ -88,3 +88,8 @@ export type CatalogOption = {
   name?: string;
   employee_number?: string | null;
 };
+
+export type RespuestaSolicitudPermiso = {
+  message?: string;
+  data?: SolicitudPermiso;
+};
