@@ -30,6 +30,10 @@ type FiltrosBiometricos = {
   page?: number;
 };
 
+type OpcionesConsulta = {
+  enabled?: boolean;
+};
+
 function limpiarParametros(parametros: Record<string, unknown>) {
   const limpio: Record<string, string> = {};
 
@@ -41,19 +45,34 @@ function limpiarParametros(parametros: Record<string, unknown>) {
   return limpio;
 }
 
+function invalidarResumenRelojes(clienteQuery: ReturnType<typeof useQueryClient>) {
+  clienteQuery.invalidateQueries({ queryKey: ["zkteco", "devices"] });
+  clienteQuery.invalidateQueries({ queryKey: ["zkteco", "commands"] });
+}
+
 export function useRelojesZkteco() {
   return useQuery({
     queryKey: ["zkteco", "devices"],
+    staleTime: 15_000,
+    refetchOnWindowFocus: false,
     queryFn: async () => {
-      const { data } = await api.get<{ data: RelojZkteco[] }>("/zkteco/devices");
+      const { data } = await api.get<{ data: RelojZkteco[] }>(
+        "/zkteco/devices",
+      );
       return data.data;
     },
   });
 }
 
-export function useComandosZkteco(filtros: FiltrosComandos) {
+export function useComandosZkteco(
+  filtros: FiltrosComandos,
+  opciones: OpcionesConsulta = {},
+) {
   return useQuery({
     queryKey: ["zkteco", "commands", filtros],
+    enabled: opciones.enabled ?? true,
+    staleTime: 10_000,
+    refetchOnWindowFocus: false,
     queryFn: async () => {
       const { data } = await api.get<RespuestaPaginada<ComandoZkteco>>(
         "/zkteco/commands",
@@ -65,7 +84,7 @@ export function useComandosZkteco(filtros: FiltrosComandos) {
             page: filtros.page ?? 1,
             per_page: 20,
           }),
-        }
+        },
       );
 
       return data;
@@ -73,9 +92,15 @@ export function useComandosZkteco(filtros: FiltrosComandos) {
   });
 }
 
-export function useUsuariosRelojZkteco(filtros: FiltrosUsuariosReloj) {
+export function useUsuariosRelojZkteco(
+  filtros: FiltrosUsuariosReloj,
+  opciones: OpcionesConsulta = {},
+) {
   return useQuery({
     queryKey: ["zkteco", "device-users", filtros],
+    enabled: opciones.enabled ?? true,
+    staleTime: 10_000,
+    refetchOnWindowFocus: false,
     queryFn: async () => {
       const { data } = await api.get<RespuestaPaginada<UsuarioRelojZkteco>>(
         "/zkteco/device-users",
@@ -88,7 +113,7 @@ export function useUsuariosRelojZkteco(filtros: FiltrosUsuariosReloj) {
             page: filtros.page ?? 1,
             per_page: 20,
           }),
-        }
+        },
       );
 
       return data;
@@ -96,9 +121,15 @@ export function useUsuariosRelojZkteco(filtros: FiltrosUsuariosReloj) {
   });
 }
 
-export function useBiometricosZkteco(filtros: FiltrosBiometricos) {
+export function useBiometricosZkteco(
+  filtros: FiltrosBiometricos,
+  opciones: OpcionesConsulta = {},
+) {
   return useQuery({
     queryKey: ["zkteco", "biometrics", filtros],
+    enabled: opciones.enabled ?? true,
+    staleTime: 10_000,
+    refetchOnWindowFocus: false,
     queryFn: async () => {
       const { data } = await api.get<RespuestaPaginada<BiometricoZkteco>>(
         "/zkteco/biometrics",
@@ -109,7 +140,7 @@ export function useBiometricosZkteco(filtros: FiltrosBiometricos) {
             page: filtros.page ?? 1,
             per_page: 20,
           }),
-        }
+        },
       );
 
       return data;
@@ -128,14 +159,33 @@ export function useConsultarUsuarioReloj() {
       deviceId: number;
       employeePin: string;
     }) => {
-      const { data } = await api.post(`/zkteco/devices/${deviceId}/query-user`, {
-        employee_pin: employeePin,
-      });
+      const { data } = await api.post(
+        `/zkteco/devices/${deviceId}/query-user`,
+        {
+          employee_pin: employeePin,
+        },
+      );
 
       return data;
     },
     onSuccess: () => {
-      clienteQuery.invalidateQueries({ queryKey: ["zkteco"] });
+      invalidarResumenRelojes(clienteQuery);
+    },
+  });
+}
+
+export function useSincronizarUsuariosReloj() {
+  const clienteQuery = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (deviceId: number) => {
+      const { data } = await api.post(
+        `/zkteco/devices/${deviceId}/query-users`,
+      );
+      return data;
+    },
+    onSuccess: () => {
+      invalidarResumenRelojes(clienteQuery);
     },
   });
 }
@@ -149,7 +199,7 @@ export function useReintentarComandoZkteco() {
       return data;
     },
     onSuccess: () => {
-      clienteQuery.invalidateQueries({ queryKey: ["zkteco"] });
+      invalidarResumenRelojes(clienteQuery);
     },
   });
 }
@@ -163,7 +213,7 @@ export function useCancelarComandoZkteco() {
       return data;
     },
     onSuccess: () => {
-      clienteQuery.invalidateQueries({ queryKey: ["zkteco"] });
+      invalidarResumenRelojes(clienteQuery);
     },
   });
 }
@@ -173,11 +223,13 @@ export function useEnviarUsuarioARelojesZkteco() {
 
   return useMutation({
     mutationFn: async (userId: number) => {
-      const { data } = await api.post(`/zkteco/users/${userId}/send-to-devices`);
+      const { data } = await api.post(
+        `/zkteco/users/${userId}/send-to-devices`,
+      );
       return data;
     },
     onSuccess: () => {
-      clienteQuery.invalidateQueries({ queryKey: ["zkteco"] });
+      invalidarResumenRelojes(clienteQuery);
     },
   });
 }

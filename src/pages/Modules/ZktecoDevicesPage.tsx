@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   useBiometricosZkteco,
   useCancelarComandoZkteco,
@@ -6,13 +6,29 @@ import {
   useConsultarUsuarioReloj,
   useRelojesZkteco,
   useReintentarComandoZkteco,
+  useSincronizarUsuariosReloj,
   useUsuariosRelojZkteco,
 } from "../../hooks/useZkteco";
+
 import type { EstadoComandoZkteco, RelojZkteco } from "../../types/zkteco";
 
 type TabActiva = "relojes" | "usuarios" | "biometria" | "comandos";
 
 const COLOR_ZENDA = "#465fff";
+
+function useValorConRetraso<T>(valor: T, retrasoMs = 400) {
+  const [valorRetrasado, setValorRetrasado] = useState(valor);
+
+  useEffect(() => {
+    const temporizador = window.setTimeout(() => {
+      setValorRetrasado(valor);
+    }, retrasoMs);
+
+    return () => window.clearTimeout(temporizador);
+  }, [valor, retrasoMs]);
+
+  return valorRetrasado;
+}
 
 function formatearFecha(valor?: string | null) {
   if (!valor) return "—";
@@ -33,11 +49,7 @@ function nombreEmpleado(registro: {
   last_name?: string | null;
   user_name?: string | null;
 }) {
-  const nombre = [
-    registro.first_name,
-    registro.middle_name,
-    registro.last_name,
-  ]
+  const nombre = [registro.first_name, registro.middle_name, registro.last_name]
     .filter(Boolean)
     .join(" ")
     .trim();
@@ -73,7 +85,7 @@ function BadgeEstado({ estado }: { estado: EstadoComandoZkteco }) {
   return (
     <span
       className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-bold ${claseEstadoComando(
-        estado
+        estado,
       )}`}
     >
       {etiquetaEstado(estado)}
@@ -87,7 +99,7 @@ function TabButton({
   onClick,
 }: {
   activo: boolean;
-  children: React.ReactNode;
+  children: ReactNode;
   onClick: () => void;
 }) {
   return (
@@ -193,30 +205,44 @@ function RelojCard({ reloj }: { reloj: RelojZkteco }) {
 
 export default function ZktecoDevicesPage() {
   const [tabActiva, setTabActiva] = useState<TabActiva>("relojes");
-  const [estadoComando, setEstadoComando] = useState<EstadoComandoZkteco | "">("");
+  const [estadoComando, setEstadoComando] = useState<EstadoComandoZkteco | "">(
+    "",
+  );
   const [pinBusqueda, setPinBusqueda] = useState("");
   const [deviceId, setDeviceId] = useState<number | "">("");
   const [pinConsulta, setPinConsulta] = useState("");
   const [deviceConsultaId, setDeviceConsultaId] = useState<number | "">("");
 
+  const pinBusquedaFiltrado = useValorConRetraso(pinBusqueda.trim(), 400);
+
   const relojes = useRelojesZkteco();
 
-  const comandos = useComandosZkteco({
-    status: estadoComando,
-    employee_pin: pinBusqueda,
-    device_id: deviceId,
-  });
+  const comandos = useComandosZkteco(
+    {
+      status: estadoComando,
+      employee_pin: pinBusquedaFiltrado,
+      device_id: deviceId,
+    },
+    { enabled: tabActiva === "comandos" },
+  );
 
-  const usuariosReloj = useUsuariosRelojZkteco({
-    search: pinBusqueda,
-    device_id: deviceId,
-  });
+  const usuariosReloj = useUsuariosRelojZkteco(
+    {
+      search: pinBusquedaFiltrado,
+      device_id: deviceId,
+    },
+    { enabled: tabActiva === "usuarios" },
+  );
 
-  const biometricos = useBiometricosZkteco({
-    employee_pin: pinBusqueda,
-  });
+  const biometricos = useBiometricosZkteco(
+    {
+      employee_pin: pinBusquedaFiltrado,
+    },
+    { enabled: tabActiva === "biometria" },
+  );
 
   const consultarUsuario = useConsultarUsuarioReloj();
+  const sincronizarUsuarios = useSincronizarUsuariosReloj();
   const reintentarComando = useReintentarComandoZkteco();
   const cancelarComando = useCancelarComandoZkteco();
 
@@ -227,35 +253,64 @@ export default function ZktecoDevicesPage() {
       relojes: listaRelojes.length,
       enLinea: listaRelojes.filter((reloj) => {
         if (!reloj.last_seen_at) return false;
-        return Date.now() - new Date(reloj.last_seen_at).getTime() < 2 * 60 * 1000;
+        return (
+          Date.now() - new Date(reloj.last_seen_at).getTime() < 2 * 60 * 1000
+        );
       }).length,
       pendientes: listaRelojes.reduce(
         (total, reloj) => total + reloj.pending_commands_count,
-        0
+        0,
       ),
       fallidos: listaRelojes.reduce(
         (total, reloj) => total + reloj.failed_commands_count,
-        0
+        0,
       ),
     };
   }, [relojes.data]);
 
+  const actualizarTodo = () => {
+    relojes.refetch();
+
+    if (tabActiva === "comandos") {
+      comandos.refetch();
+    }
+
+    if (tabActiva === "usuarios") {
+      usuariosReloj.refetch();
+    }
+
+    if (tabActiva === "biometria") {
+      biometricos.refetch();
+    }
+  };
+
   const ejecutarConsulta = async () => {
     if (!deviceConsultaId || !pinConsulta.trim()) return;
 
-    await consultarUsuario.mutateAsync({
-      deviceId: Number(deviceConsultaId),
-      employeePin: pinConsulta.trim(),
-    });
+    try {
+      await consultarUsuario.mutateAsync({
+        deviceId: Number(deviceConsultaId),
+        employeePin: pinConsulta.trim(),
+      });
 
-    setPinConsulta("");
+      setPinConsulta("");
+    } catch (error) {
+      console.error("Error al consultar usuario desde reloj:", error);
+      alert(
+        "No se pudo consultar el usuario desde el reloj. Revisa la pestaña Comandos o la consola.",
+      );
+    }
   };
 
-  const actualizarTodo = () => {
-    relojes.refetch();
-    comandos.refetch();
-    usuariosReloj.refetch();
-    biometricos.refetch();
+  const sincronizarUsuariosDelReloj = async (idReloj: number) => {
+    try {
+      await sincronizarUsuarios.mutateAsync(idReloj);
+    } catch (error) {
+      console.error("Error al sincronizar usuarios del reloj:", error);
+      alert(
+        "No se pudo enviar la sincronización al reloj. Revisa la pestaña Comandos o la consola.",
+      );
+    }
   };
 
   return (
@@ -270,8 +325,9 @@ export default function ZktecoDevicesPage() {
               Relojes checadores
             </h1>
             <p className="mt-1 max-w-3xl text-sm text-slate-500 dark:text-slate-400">
-              Administra relojes ZKTeco, usuarios enviados, tarjetas, huellas y comandos de sincronización.
-              Este módulo complementa el panel de registros de entrada y salida.
+              Administra relojes ZKTeco, usuarios enviados, tarjetas, huellas y
+              comandos de sincronización. Este módulo complementa el panel de
+              registros de entrada y salida.
             </p>
           </div>
 
@@ -310,16 +366,28 @@ export default function ZktecoDevicesPage() {
 
       <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
         <div className="flex flex-wrap gap-2">
-          <TabButton activo={tabActiva === "relojes"} onClick={() => setTabActiva("relojes")}>
+          <TabButton
+            activo={tabActiva === "relojes"}
+            onClick={() => setTabActiva("relojes")}
+          >
             Relojes
           </TabButton>
-          <TabButton activo={tabActiva === "usuarios"} onClick={() => setTabActiva("usuarios")}>
+          <TabButton
+            activo={tabActiva === "usuarios"}
+            onClick={() => setTabActiva("usuarios")}
+          >
             Usuarios
           </TabButton>
-          <TabButton activo={tabActiva === "biometria"} onClick={() => setTabActiva("biometria")}>
+          <TabButton
+            activo={tabActiva === "biometria"}
+            onClick={() => setTabActiva("biometria")}
+          >
             Biometría
           </TabButton>
-          <TabButton activo={tabActiva === "comandos"} onClick={() => setTabActiva("comandos")}>
+          <TabButton
+            activo={tabActiva === "comandos"}
+            onClick={() => setTabActiva("comandos")}
+          >
             Comandos
           </TabButton>
         </div>
@@ -337,7 +405,9 @@ export default function ZktecoDevicesPage() {
           <select
             value={deviceId}
             onChange={(evento) =>
-              setDeviceId(evento.target.value ? Number(evento.target.value) : "")
+              setDeviceId(
+                evento.target.value ? Number(evento.target.value) : "",
+              )
             }
             className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#465fff]/40 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
           >
@@ -369,7 +439,7 @@ export default function ZktecoDevicesPage() {
             onClick={actualizarTodo}
             className="rounded-xl bg-[#465fff] px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-[#3548d4]"
           >
-            Aplicar / refrescar
+            Actualizar vista
           </button>
         </div>
       </div>
@@ -381,7 +451,8 @@ export default function ZktecoDevicesPage() {
               Consultar usuario desde reloj
             </h2>
             <p className="mt-1 text-sm text-slate-500">
-              Solicita al reloj los datos USERINFO y FINGERTMP para un PIN específico.
+              Solicita al reloj los datos USERINFO y FINGERTMP para un PIN
+              específico.
             </p>
 
             <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-3">
@@ -389,7 +460,7 @@ export default function ZktecoDevicesPage() {
                 value={deviceConsultaId}
                 onChange={(evento) =>
                   setDeviceConsultaId(
-                    evento.target.value ? Number(evento.target.value) : ""
+                    evento.target.value ? Number(evento.target.value) : "",
                   )
                 }
                 className="rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#465fff]/40 dark:border-slate-700 dark:bg-slate-950 dark:text-white"
@@ -412,17 +483,36 @@ export default function ZktecoDevicesPage() {
               <button
                 type="button"
                 onClick={ejecutarConsulta}
-                disabled={consultarUsuario.isPending || !deviceConsultaId || !pinConsulta.trim()}
+                disabled={
+                  consultarUsuario.isPending ||
+                  !deviceConsultaId ||
+                  !pinConsulta.trim()
+                }
                 className="rounded-xl bg-[#465fff] px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-[#3548d4] disabled:opacity-60"
               >
-                {consultarUsuario.isPending ? "Enviando..." : "Consultar usuario"}
+                {consultarUsuario.isPending
+                  ? "Enviando..."
+                  : "Consultar usuario"}
               </button>
             </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
             {(relojes.data ?? []).map((reloj) => (
-              <RelojCard key={reloj.id} reloj={reloj} />
+              <div key={reloj.id} className="space-y-3">
+                <RelojCard reloj={reloj} />
+
+                <button
+                  type="button"
+                  onClick={() => sincronizarUsuariosDelReloj(reloj.id)}
+                  disabled={sincronizarUsuarios.isPending}
+                  className="w-full rounded-xl border border-[#465fff]/20 bg-[#465fff]/10 px-4 py-2 text-sm font-bold text-[#465fff] hover:bg-[#465fff]/15 disabled:opacity-60"
+                >
+                  {sincronizarUsuarios.isPending
+                    ? "Sincronizando..."
+                    : "Sincronizar usuarios del reloj"}
+                </button>
+              </div>
             ))}
           </div>
         </div>
@@ -433,17 +523,32 @@ export default function ZktecoDevicesPage() {
           <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
             <thead className="bg-slate-50 dark:bg-slate-950">
               <tr>
-                <th className="px-4 py-3 text-left font-bold text-slate-500">PIN</th>
-                <th className="px-4 py-3 text-left font-bold text-slate-500">Empleado Zenda</th>
-                <th className="px-4 py-3 text-left font-bold text-slate-500">Nombre reloj</th>
-                <th className="px-4 py-3 text-left font-bold text-slate-500">Tarjeta</th>
-                <th className="px-4 py-3 text-left font-bold text-slate-500">Reloj</th>
-                <th className="px-4 py-3 text-left font-bold text-slate-500">Última detección</th>
+                <th className="px-4 py-3 text-left font-bold text-slate-500">
+                  PIN
+                </th>
+                <th className="px-4 py-3 text-left font-bold text-slate-500">
+                  Empleado Zenda
+                </th>
+                <th className="px-4 py-3 text-left font-bold text-slate-500">
+                  Nombre reloj
+                </th>
+                <th className="px-4 py-3 text-left font-bold text-slate-500">
+                  Tarjeta
+                </th>
+                <th className="px-4 py-3 text-left font-bold text-slate-500">
+                  Reloj
+                </th>
+                <th className="px-4 py-3 text-left font-bold text-slate-500">
+                  Última detección
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {(usuariosReloj.data?.data ?? []).map((usuario) => (
-                <tr key={usuario.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                <tr
+                  key={usuario.id}
+                  className="hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                >
                   <td className="px-4 py-3 font-mono font-bold text-slate-800 dark:text-white">
                     {usuario.employee_pin}
                   </td>
@@ -451,7 +556,9 @@ export default function ZktecoDevicesPage() {
                     <div className="font-bold text-slate-800 dark:text-white">
                       {nombreEmpleado(usuario)}
                     </div>
-                    <div className="text-xs text-slate-400">{usuario.email || "—"}</div>
+                    <div className="text-xs text-slate-400">
+                      {usuario.email || "—"}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
                     {usuario.name_from_device || "—"}
@@ -477,18 +584,35 @@ export default function ZktecoDevicesPage() {
           <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
             <thead className="bg-slate-50 dark:bg-slate-950">
               <tr>
-                <th className="px-4 py-3 text-left font-bold text-slate-500">PIN</th>
-                <th className="px-4 py-3 text-left font-bold text-slate-500">Empleado</th>
-                <th className="px-4 py-3 text-left font-bold text-slate-500">Tipo</th>
-                <th className="px-4 py-3 text-left font-bold text-slate-500">Índice</th>
-                <th className="px-4 py-3 text-left font-bold text-slate-500">Tamaño</th>
-                <th className="px-4 py-3 text-left font-bold text-slate-500">Origen</th>
-                <th className="px-4 py-3 text-left font-bold text-slate-500">Capturado</th>
+                <th className="px-4 py-3 text-left font-bold text-slate-500">
+                  PIN
+                </th>
+                <th className="px-4 py-3 text-left font-bold text-slate-500">
+                  Empleado
+                </th>
+                <th className="px-4 py-3 text-left font-bold text-slate-500">
+                  Tipo
+                </th>
+                <th className="px-4 py-3 text-left font-bold text-slate-500">
+                  Índice
+                </th>
+                <th className="px-4 py-3 text-left font-bold text-slate-500">
+                  Tamaño
+                </th>
+                <th className="px-4 py-3 text-left font-bold text-slate-500">
+                  Origen
+                </th>
+                <th className="px-4 py-3 text-left font-bold text-slate-500">
+                  Capturado
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {(biometricos.data?.data ?? []).map((bio) => (
-                <tr key={bio.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/60">
+                <tr
+                  key={bio.id}
+                  className="hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                >
                   <td className="px-4 py-3 font-mono font-bold text-slate-800 dark:text-white">
                     {bio.employee_pin}
                   </td>
@@ -497,7 +621,9 @@ export default function ZktecoDevicesPage() {
                   </td>
                   <td className="px-4 py-3">
                     <span className="rounded-full bg-[#465fff]/10 px-2.5 py-1 text-xs font-bold text-[#465fff]">
-                      {bio.biometric_type === "fingerprint" ? "Huella" : bio.biometric_type}
+                      {bio.biometric_type === "fingerprint"
+                        ? "Huella"
+                        : bio.biometric_type}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-slate-600 dark:text-slate-300">
@@ -524,20 +650,41 @@ export default function ZktecoDevicesPage() {
           <table className="min-w-full divide-y divide-slate-200 text-sm dark:divide-slate-800">
             <thead className="bg-slate-50 dark:bg-slate-950">
               <tr>
-                <th className="px-4 py-3 text-left font-bold text-slate-500">ID</th>
-                <th className="px-4 py-3 text-left font-bold text-slate-500">Reloj</th>
-                <th className="px-4 py-3 text-left font-bold text-slate-500">PIN</th>
-                <th className="px-4 py-3 text-left font-bold text-slate-500">Tipo</th>
-                <th className="px-4 py-3 text-left font-bold text-slate-500">Estado</th>
-                <th className="px-4 py-3 text-left font-bold text-slate-500">Intentos</th>
-                <th className="px-4 py-3 text-left font-bold text-slate-500">Respuesta</th>
-                <th className="px-4 py-3 text-right font-bold text-slate-500">Acciones</th>
+                <th className="px-4 py-3 text-left font-bold text-slate-500">
+                  ID
+                </th>
+                <th className="px-4 py-3 text-left font-bold text-slate-500">
+                  Reloj
+                </th>
+                <th className="px-4 py-3 text-left font-bold text-slate-500">
+                  PIN
+                </th>
+                <th className="px-4 py-3 text-left font-bold text-slate-500">
+                  Tipo
+                </th>
+                <th className="px-4 py-3 text-left font-bold text-slate-500">
+                  Estado
+                </th>
+                <th className="px-4 py-3 text-left font-bold text-slate-500">
+                  Intentos
+                </th>
+                <th className="px-4 py-3 text-left font-bold text-slate-500">
+                  Respuesta
+                </th>
+                <th className="px-4 py-3 text-right font-bold text-slate-500">
+                  Acciones
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {(comandos.data?.data ?? []).map((comando) => (
-                <tr key={comando.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/60">
-                  <td className="px-4 py-3 font-mono text-slate-500">#{comando.id}</td>
+                <tr
+                  key={comando.id}
+                  className="hover:bg-slate-50 dark:hover:bg-slate-800/60"
+                >
+                  <td className="px-4 py-3 font-mono text-slate-500">
+                    #{comando.id}
+                  </td>
                   <td className="px-4 py-3 text-slate-700 dark:text-slate-200">
                     {comando.device_name || comando.device_serial || "—"}
                   </td>
@@ -568,7 +715,9 @@ export default function ZktecoDevicesPage() {
                         </button>
                       )}
 
-                      {["pending", "sent", "failed"].includes(comando.status) && (
+                      {["pending", "sent", "failed"].includes(
+                        comando.status,
+                      ) && (
                         <button
                           type="button"
                           onClick={() => cancelarComando.mutate(comando.id)}
@@ -587,7 +736,9 @@ export default function ZktecoDevicesPage() {
       )}
 
       <div className="rounded-2xl border border-[#465fff]/20 bg-[#465fff]/5 p-4 text-sm text-slate-600 dark:text-slate-300">
-        <span className="font-bold text-[#465fff]">Nota:</span> Las huellas y plantillas biométricas no se muestran completas por seguridad. Solo se visualiza el estado, origen, índice y tamaño.
+        <span className="font-bold text-[#465fff]">Nota:</span> Las huellas y
+        plantillas biométricas no se muestran completas por seguridad. Solo se
+        visualiza el estado, origen, índice y tamaño.
       </div>
     </div>
   );
